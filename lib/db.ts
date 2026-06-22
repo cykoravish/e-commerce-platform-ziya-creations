@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 let isConnected: boolean = false;
 
 export async function connectDB() {
-  if (isConnected) {
-    console.log('[v0] Using existing database connection');
+  // Check if already connected
+  if (isConnected && mongoose.connection.readyState === 1) {
     return;
   }
 
@@ -14,8 +14,11 @@ export async function connectDB() {
       throw new Error('MONGODB_URI is not defined');
     }
 
+    // Connect to MongoDB with proper options
     const conn = await mongoose.connect(mongoUri, {
-      bufferCommands: false,
+      bufferCommands: true,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
     });
 
     isConnected = conn.connections[0].readyState === 1;
@@ -23,6 +26,7 @@ export async function connectDB() {
     return conn;
   } catch (error) {
     console.error('[v0] Database connection failed:', error);
+    isConnected = false;
     throw error;
   }
 }
