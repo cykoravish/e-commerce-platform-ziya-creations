@@ -13,14 +13,12 @@ export interface ICategory extends mongoose.Document {
 const categorySchema = new mongoose.Schema<ICategory>(
   {
     name: { type: String, required: true, unique: true, trim: true },
-    slug: { type: String, required: true, unique: true, lowercase: true },
+    slug: { type: String, required: true, unique: true, lowercase: true, index: true },
     image: { type: String },
     description: { type: String },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
-
-categorySchema.index({ slug: 1 });
 
 export default mongoose.models.Category || mongoose.model<ICategory>('Category', categorySchema);

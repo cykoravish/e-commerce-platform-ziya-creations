@@ -18,12 +18,12 @@ export default function AdminDashboard() {
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
+    <div className="min-h-screen bg-white">
+      <div className="bg-primary shadow">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <div className="text-sm text-gray-600">
+            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+            <div className="text-sm text-white">
               Welcome, {user?.name}
             </div>
           </div>
@@ -41,52 +41,60 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
+          <div className="bg-white border border-gray-200 rounded p-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Quick Actions</h2>
             <div className="space-y-3">
               <Link
                 href="/admin/products"
-                className="block w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-center"
+                className="block w-full px-4 py-2 bg-primary text-white rounded hover:opacity-90 text-center font-medium"
               >
                 Manage Products
               </Link>
               <Link
                 href="/admin/categories"
-                className="block w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-center"
+                className="block w-full px-4 py-2 bg-primary text-white rounded hover:opacity-90 text-center font-medium"
               >
                 Manage Categories
               </Link>
               <Link
                 href="/admin/orders"
-                className="block w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-center"
+                className="block w-full px-4 py-2 bg-primary text-white rounded hover:opacity-90 text-center font-medium"
               >
                 View Orders
               </Link>
               <Link
                 href="/admin/coupons"
-                className="block w-full px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-center"
+                className="block w-full px-4 py-2 bg-secondary text-white rounded hover:opacity-90 text-center font-medium"
               >
                 Manage Coupons
               </Link>
+              {user?.role === 'super_admin' && (
+                <Link
+                  href="/admin/manage-admins"
+                  className="block w-full px-4 py-2 bg-secondary text-white rounded hover:opacity-90 text-center font-medium"
+                >
+                  Manage Admins
+                </Link>
+              )}
             </div>
           </div>
 
           {/* Admin Info */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">Admin Information</h2>
+          <div className="bg-white border border-gray-200 rounded p-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Admin Information</h2>
             <div className="space-y-3 text-sm">
               <div>
-                <span className="font-semibold">Name:</span> {user?.name}
+                <span className="font-semibold text-gray-700">Name:</span> <span className="text-gray-900">{user?.name}</span>
               </div>
               <div>
-                <span className="font-semibold">Email:</span> {user?.email}
+                <span className="font-semibold text-gray-700">Email:</span> <span className="text-gray-900">{user?.email}</span>
               </div>
               <div>
-                <span className="font-semibold">Phone:</span> {user?.phone}
+                <span className="font-semibold text-gray-700">Phone:</span> <span className="text-gray-900">{user?.phone}</span>
               </div>
               <div>
-                <span className="font-semibold">Role:</span>{' '}
-                <span className="capitalize">{user?.role.replace('_', ' ')}</span>
+                <span className="font-semibold text-gray-700">Role:</span>{' '}
+                <span className="capitalize text-gray-900 font-medium">{user?.role.replace('_', ' ')}</span>
               </div>
             </div>
           </div>
@@ -106,11 +114,11 @@ function DashboardCard({
   icon: string;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white border border-gray-200 rounded p-6 hover:shadow-md transition">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-3xl font-bold mt-2">{value}</p>
+          <p className="text-gray-600 text-sm font-medium">{title}</p>
+          <p className="text-3xl font-bold mt-2 text-gray-900">{value}</p>
         </div>
         <div className="text-4xl">{icon}</div>
       </div>

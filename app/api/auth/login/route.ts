@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Invalid email or password', 401, 'INVALID_CREDENTIALS');
     }
 
-    if (!user.isVerified) {
+    // Only customers need email verification. Admins/Super Admins skip this
+    if (!user.isVerified && user.role === 'customer') {
       return createErrorResponse('Please verify your email first', 403, 'NOT_VERIFIED');
     }
 
