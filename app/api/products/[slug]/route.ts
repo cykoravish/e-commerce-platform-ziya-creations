@@ -1,0 +1,38 @@
+import { connectDB } from '@/lib/db';
+import Product from '@/lib/models/Product';
+import Review from '@/lib/models/Review';
+import { createResponse, createErrorResponse } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    await connectDB();
+
+    const product = await Product.findOne({ slug: params.slug, isActive: true })
+      .populate('category', 'name slug');
+
+    if (!product) {
+      return createErrorResponse('Product not found', 404, 'NOT_FOUND');
+    }
+
+    // Get approved reviews
+    const reviews = await Review.find({ product: product._id, isApproved: true })
+      .populate('user', 'name avatar')
+      .sort('-createdAt')
+      .limit(10)
+      .lean();
+
+    return createResponse(
+      { product, reviews },
+      'Product fetched successfully',
+      200,
+      'SUCCESS'
+    );
+  } catch (error) {
+    console.error('[v0] Get product error:', error);
+    return createErrorResponse('Failed to fetch product', 500, 'SERVER_ERROR');
+  }
+}
