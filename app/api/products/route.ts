@@ -1,4 +1,5 @@
 import { connectDB } from '@/lib/db';
+import Category from '@/lib/models/Category';
 import Product from '@/lib/models/Product';
 import { createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
