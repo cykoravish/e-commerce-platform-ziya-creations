@@ -44,7 +44,7 @@ export function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:relative top-16 left-0 h-screen bg-white border-r border-gray-200 w-64 z-40 transform transition-transform duration-300 ${
+        className={`fixed md:relative top-0 left-0 h-screen bg-white border-r border-gray-200 w-64 z-40 transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
