@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-
+    console.log('Category model:', Category.modelName);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
