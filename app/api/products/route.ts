@@ -1,5 +1,5 @@
+import '@/lib/models/Category';
 import { connectDB } from '@/lib/db';
-import Category from '@/lib/models/Category';
 import Product from '@/lib/models/Product';
 import { createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
@@ -7,7 +7,6 @@ import { NextRequest } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    console.log('Category model:', Category.modelName);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
