@@ -1,127 +1,228 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
+import {
+  BarChart3,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Tag,
+  Crown,
+} from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { user, loading, isAdmin } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      router.push('/auth/login');
-    }
-  }, [user, loading, isAdmin, router]);
-
-  if (loading) return <div className="p-8">Loading...</div>;
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'super_admin';
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="bg-primary shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+    <>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary to-blue-600 shadow-lg">
+        <div className="px-6 py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-            <div className="text-sm text-white">
-              Welcome, {user?.name}
+            <div>
+              <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+              <p className="text-blue-100 text-sm mt-1">Manage your platform with ease</p>
             </div>
+            {isSuperAdmin && (
+              <div className="flex items-center gap-2 bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold shadow-lg">
+                <Crown size={18} />
+                SUPER ADMIN
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Dashboard Cards */}
-          <DashboardCard title="Total Products" value="0" icon="📦" />
-          <DashboardCard title="Total Orders" value="0" icon="🛒" />
-          <DashboardCard title="Total Revenue" value="₹0" icon="💰" />
-          <DashboardCard title="Active Users" value="0" icon="👥" />
-        </div>
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {user?.name}!</h2>
+            <p className="text-gray-600 flex items-center gap-2">
+              <Crown size={16} className="text-yellow-500" />
+              You have full platform access as {isSuperAdmin ? 'Super Admin' : 'Admin'}
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Quick Actions */}
-          <div className="bg-white border border-gray-200 rounded p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Quick Actions</h2>
-            <div className="space-y-3">
-              <Link
+          {/* Statistics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <StatCard
+              icon={<Package size={24} />}
+              title="Total Products"
+              value="0"
+              trend="+0% from last month"
+              color="bg-blue-50"
+            />
+            <StatCard
+              icon={<ShoppingCart size={24} />}
+              title="Total Orders"
+              value="0"
+              trend="+0% from last month"
+              color="bg-green-50"
+            />
+            <StatCard
+              icon={<TrendingUp size={24} />}
+              title="Revenue"
+              value="₹0"
+              trend="+0% from last month"
+              color="bg-orange-50"
+            />
+            <StatCard
+              icon={<Users size={24} />}
+              title="Active Users"
+              value="0"
+              trend="+0% from last month"
+              color="bg-purple-50"
+            />
+          </div>
+
+          {/* Management Center */}
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <BarChart3 size={20} />
+              Management Center
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ManagementCard
                 href="/admin/products"
-                className="block w-full px-4 py-2 bg-primary text-white rounded hover:opacity-90 text-center font-medium"
-              >
-                Manage Products
-              </Link>
-              <Link
+                icon={<Package size={24} />}
+                title="Manage Products"
+                description="Add, edit, and delete products"
+                color="bg-blue-50 border-blue-200"
+              />
+              <ManagementCard
                 href="/admin/categories"
-                className="block w-full px-4 py-2 bg-primary text-white rounded hover:opacity-90 text-center font-medium"
-              >
-                Manage Categories
-              </Link>
-              <Link
+                icon={<Tag size={24} />}
+                title="Manage Categories"
+                description="Create and organize product categories"
+                color="bg-purple-50 border-purple-200"
+              />
+              <ManagementCard
                 href="/admin/orders"
-                className="block w-full px-4 py-2 bg-primary text-white rounded hover:opacity-90 text-center font-medium"
-              >
-                View Orders
-              </Link>
-              <Link
+                icon={<ShoppingCart size={24} />}
+                title="View Orders"
+                description="Track and manage customer orders"
+                color="bg-green-50 border-green-200"
+              />
+              <ManagementCard
                 href="/admin/coupons"
-                className="block w-full px-4 py-2 bg-secondary text-white rounded hover:opacity-90 text-center font-medium"
-              >
-                Manage Coupons
-              </Link>
-              {user?.role === 'super_admin' && (
-                <Link
-                  href="/admin/manage-admins"
-                  className="block w-full px-4 py-2 bg-secondary text-white rounded hover:opacity-90 text-center font-medium"
-                >
-                  Manage Admins
-                </Link>
-              )}
+                icon={<Tag size={24} />}
+                title="Manage Coupons"
+                description="Create discount codes and promotions"
+                color="bg-orange-50 border-orange-200"
+              />
             </div>
           </div>
 
-          {/* Admin Info */}
-          <div className="bg-white border border-gray-200 rounded p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Admin Information</h2>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="font-semibold text-gray-700">Name:</span> <span className="text-gray-900">{user?.name}</span>
+          {/* Super Admin Section */}
+          {isSuperAdmin && (
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Crown size={20} className="text-yellow-500" />
+                Super Admin Controls
+              </h3>
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-6">
+                <Link href="/admin/manage-admins">
+                  <div className="flex items-center justify-between hover:opacity-75 transition cursor-pointer">
+                    <div>
+                      <h4 className="font-bold text-gray-900">Manage Admin Accounts</h4>
+                      <p className="text-sm text-gray-600">Create and manage admin credentials</p>
+                    </div>
+                    <Users size={24} className="text-primary" />
+                  </div>
+                </Link>
               </div>
-              <div>
-                <span className="font-semibold text-gray-700">Email:</span> <span className="text-gray-900">{user?.email}</span>
+            </div>
+          )}
+
+          {/* Account Details */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-3">Account Details</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{user?.name}</p>
+                  <p className="text-sm text-primary font-medium uppercase">
+                    {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold text-gray-700">Phone:</span> <span className="text-gray-900">{user?.phone}</span>
+              <div className="pt-3 border-t">
+                <p className="text-sm text-gray-600"><span className="font-semibold">Email:</span> {user?.email}</p>
+                <p className="text-sm text-gray-600"><span className="font-semibold">Phone:</span> {user?.phone || 'Not provided'}</p>
               </div>
-              <div>
-                <span className="font-semibold text-gray-700">Role:</span>{' '}
-                <span className="capitalize text-gray-900 font-medium">{user?.role.replace('_', ' ')}</span>
-              </div>
+              <Link
+                href="/account"
+                className="block w-full text-center bg-primary text-white py-2 rounded font-medium hover:opacity-90 transition mt-4"
+              >
+                Edit Profile
+              </Link>
             </div>
           </div>
         </div>
+      </main>
+    </>
+  );
+}
+
+function StatCard({
+  icon,
+  title,
+  value,
+  trend,
+  color,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  trend: string;
+  color: string;
+}) {
+  return (
+    <div className={`${color} rounded-lg border border-gray-200 p-6 transition hover:shadow-md`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-600 font-medium">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+        </div>
+        <div className="text-gray-400">{icon}</div>
       </div>
+      <p className="text-xs text-green-600 font-medium mt-3">{trend}</p>
     </div>
   );
 }
 
-function DashboardCard({
-  title,
-  value,
+function ManagementCard({
+  href,
   icon,
+  title,
+  description,
+  color,
 }: {
+  href: string;
+  icon: React.ReactNode;
   title: string;
-  value: string;
-  icon: string;
+  description: string;
+  color: string;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded p-6 hover:shadow-md transition">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600 text-sm font-medium">{title}</p>
-          <p className="text-3xl font-bold mt-2 text-gray-900">{value}</p>
+    <Link href={href}>
+      <div className={`${color} border rounded-lg p-4 transition transform hover:scale-105 cursor-pointer group`}>
+        <div className="flex items-start gap-4">
+          <div className="text-gray-700 group-hover:text-primary transition">{icon}</div>
+          <div>
+            <h3 className="font-semibold text-gray-900">{title}</h3>
+            <p className="text-sm text-gray-600 mt-1">{description}</p>
+          </div>
         </div>
-        <div className="text-4xl">{icon}</div>
       </div>
-    </div>
+    </Link>
   );
 }

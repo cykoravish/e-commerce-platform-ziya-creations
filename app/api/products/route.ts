@@ -1,13 +1,16 @@
-import { connectDB } from '@/lib/db';
+import mongoose from 'mongoose';
 import Category from '@/lib/models/Category';
+import { connectDB } from '@/lib/db';
 import Product from '@/lib/models/Product';
 import { createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  console.log("product api hit");
   try {
     await connectDB();
-
+    console.log('Category modelName:', Category.modelName);
+    console.log('Registered models:', mongoose.modelNames());
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
@@ -28,7 +31,7 @@ export async function GET(request: NextRequest) {
         { description: { $regex: search, $options: 'i' } },
       ];
     }
-
+    console.log('Before populate:', mongoose.modelNames());
     const products = await Product.find(query)
       .populate('category', 'name slug')
       .sort(sort)
