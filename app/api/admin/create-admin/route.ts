@@ -1,6 +1,6 @@
 import { connectDB } from '@/lib/db';
 import User from '@/lib/models/User';
-import { hashPassword } from '@/lib/auth';
+import { hashPassword, verifyToken } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -8,9 +8,10 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const { email, password, name, phone } = await req.json();
-    const token = req.headers.get('authorization')?.split('Bearer ')[1];
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-    // Verify super admin token
+    // Verify token exists
     if (!token) {
       return NextResponse.json(
         { statusCode: 'ERROR', message: 'Unauthorized' },
@@ -18,9 +19,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify admin is super admin
-    const adminToken = await User.findOne({ _id: token }).select('+password');
-    if (!adminToken || adminToken.role !== 'super_admin') {
+    // Decode JWT token to get userId
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json(
+        { statusCode: 'ERROR', message: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // Verify user is super admin
+    const superAdmin = await User.findById(decoded.userId);
+    if (!superAdmin || superAdmin.role !== 'super_admin') {
       return NextResponse.json(
         { statusCode: 'ERROR', message: 'Only Super Admin can create admins' },
         { status: 403 }
@@ -86,9 +96,10 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    const token = req.headers.get('authorization')?.split('Bearer ')[1];
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-    // Verify super admin
+    // Verify token exists
     if (!token) {
       return NextResponse.json(
         { statusCode: 'ERROR', message: 'Unauthorized' },
@@ -96,7 +107,17 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const superAdmin = await User.findById(token);
+    // Decode JWT token
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json(
+        { statusCode: 'ERROR', message: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // Verify super admin
+    const superAdmin = await User.findById(decoded.userId);
     if (!superAdmin || superAdmin.role !== 'super_admin') {
       return NextResponse.json(
         { statusCode: 'ERROR', message: 'Only Super Admin can view admins' },
