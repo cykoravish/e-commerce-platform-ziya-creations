@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
-import { ShoppingCart, User, LogOut, Search, Menu, X, Heart } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, Heart, MapPin, Phone, Mail, ChevronRight, Star } from 'lucide-react';
 
 interface Category {
   _id: string;
@@ -23,68 +23,122 @@ interface Product {
   rating: number;
   reviewCount: number;
   stock: number;
+  totalSold: number;
+  gender: string;
+}
+
+interface Banner {
+  _id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  link?: string;
 }
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedGender, setSelectedGender] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [categoryScrollIndex, setCategoryScrollIndex] = useState(0);
+  const [bestSellerIndex, setBestSellerIndex] = useState(0);
   const { user, logout } = useAuth();
   const { items: cart } = useCart();
 
   useEffect(() => {
-    fetchCategories();
-    fetchProducts();
-  }, []);
+    fetchData();
+    const bannerTimer = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % (banners.length || 1));
+    }, 5000);
+    return () => clearInterval(bannerTimer);
+  }, [banners.length]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        fetchCategories(),
+        fetchProducts(),
+        fetchBestSellers(),
+        fetchBanners(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
-        setCategories(data.data);
+        setCategories(data.data || []);
       }
     } catch (error) {
       console.error('[v0] Fetch categories error:', error);
     }
   };
 
-  const fetchProducts = async (categoryId?: string) => {
+  const fetchProducts = async (categoryId?: string, gender?: string) => {
     try {
-      setLoading(true);
       let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=12`;
-      if (categoryId) {
-        url += `&category=${categoryId}`;
-      }
+      if (categoryId) url += `&category=${categoryId}`;
+      if (gender) url += `&gender=${gender}`;
       const response = await fetch(url);
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
-        setProducts(data.data.products || []);
+        setProducts(data.data?.products || []);
       }
     } catch (error) {
       console.error('[v0] Fetch products error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleCategoryChange = (categoryId: string) => {
+  const fetchBestSellers = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=5&sort=-totalSold`);
+      const data = await response.json();
+      if (data.statusCode === 'SUCCESS') {
+        setBestSellers(data.data?.products || []);
+      }
+    } catch (error) {
+      console.error('[v0] Fetch best sellers error:', error);
+    }
+  };
+
+  const fetchBanners = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banners`);
+      const data = await response.json();
+      if (data.statusCode === 'SUCCESS') {
+        setBanners(data.data || []);
+      }
+    } catch (error) {
+      console.error('[v0] Fetch banners error:', error);
+    }
+  };
+
+  const handleCategoryFilter = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    setMobileMenuOpen(false);
-    fetchProducts(categoryId || undefined);
+    setSelectedGender('');
+    fetchProducts(categoryId);
+  };
+
+  const handleGenderFilter = (gender: string) => {
+    setSelectedGender(gender);
+    fetchProducts(selectedCategory, gender);
   };
 
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) => {
       const newWishlist = new Set(prev);
-      if (newWishlist.has(productId)) {
-        newWishlist.delete(productId);
-      } else {
-        newWishlist.add(productId);
-      }
+      newWishlist.has(productId) ? newWishlist.delete(productId) : newWishlist.add(productId);
       return newWishlist;
     });
   };
@@ -92,287 +146,391 @@ export default function Home() {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-primary shadow-lg">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/" className="flex-shrink-0">
               <div className="text-2xl font-bold text-white">Ziya</div>
-              <div className="text-xs text-secondary font-bold">Creations</div>
             </Link>
 
-            {/* Search Bar - Hidden on mobile */}
-            <div className="flex-1 hidden md:block max-w-md mx-4">
+            {/* Search Bar */}
+            <div className="flex-1 hidden md:block max-w-md">
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search for products, brands and more"
+                  placeholder="Search for products..."
                   className="w-full px-4 py-2 rounded text-sm text-gray-900"
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  <Search size={18} />
-                </button>
+                <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
-            {/* Navigation - Hidden on mobile */}
-            <nav className="hidden md:flex items-center gap-4">
-              {user ? (
-                <>
-                  {user.role !== 'customer' && (
-                    <Link href="/admin" className="text-white text-sm font-medium hover:text-secondary transition">
-                      Admin
-                    </Link>
-                  )}
-                  <Link href="/orders" className="text-white text-sm font-medium hover:text-secondary transition">
-                    Orders
-                  </Link>
-                  <Link href="/cart" className="relative text-white hover:text-secondary transition">
-                    <ShoppingCart size={20} />
-                    {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Link>
-                  <div className="relative group">
-                    <button className="text-white hover:text-secondary transition flex items-center gap-1">
-                      <User size={20} />
-                    </button>
-                    <div className="absolute right-0 mt-2 w-48 bg-white shadow-xl rounded opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition">
-                      <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
-                      <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        My Account
-                      </Link>
-                      <button
-                        onClick={logout}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                      >
-                        <LogOut size={16} /> Logout
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/login" className="text-white text-sm font-medium hover:text-secondary transition">
-                    Login
-                  </Link>
-                  <Link href="/auth/signup" className="bg-secondary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">
-                    Sign Up
-                  </Link>
-                </>
-              )}
+            {/* Right Icons */}
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/wishlist" className="relative text-white hover:text-secondary transition">
+                <Heart size={24} fill={wishlist.size > 0 ? 'currentColor' : 'none'} />
+                {wishlist.size > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlist.size}
+                  </span>
+                )}
+              </Link>
+              <Link href="/cart" className="relative text-white hover:text-secondary transition">
+                <ShoppingCart size={24} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
             </nav>
 
             {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-white"
-            >
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-white">
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile Search & Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden pb-4 border-t border-blue-400 pt-3 space-y-3 animate-in fade-in slide-in-from-top">
-              <div className="flex gap-2">
+            <div className="md:hidden pb-4 border-t border-blue-400 pt-4 space-y-4 animate-in fade-in slide-in-from-top">
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search products..."
-                  className="flex-1 px-3 py-2 rounded text-sm text-gray-900"
+                  placeholder="Search..."
+                  className="w-full px-4 py-2 rounded text-sm text-gray-900"
                 />
-                <button className="bg-secondary text-white px-3 py-2 rounded">
-                  <Search size={16} />
-                </button>
+                <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
+
               {user ? (
-                <>
-                  <Link href="/cart" className="flex items-center gap-2 text-white text-sm font-medium hover:text-secondary">
-                    <ShoppingCart size={16} /> Cart {cartCount > 0 && `(${cartCount})`}
+                <div className="space-y-3 text-white text-sm">
+                  <div className="flex items-center gap-2 pb-3 border-b border-blue-400">
+                    <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-gray-900">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{user.name}</p>
+                      <p className="text-xs text-blue-100">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <Link href="/orders" className="block hover:text-secondary">
+                    My Orders
                   </Link>
-                  <Link href="/orders" className="block text-white text-sm font-medium hover:text-secondary">
-                    Orders
+                  <Link href="/track-order" className="block hover:text-secondary">
+                    Track Order
                   </Link>
-                  <Link href="/account" className="block text-white text-sm font-medium hover:text-secondary">
-                    My Account
+                  
+                  <div className="pt-3 border-t border-blue-400">
+                    <p className="font-semibold mb-2">Shop by Category</p>
+                    <div className="space-y-1 ml-4">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat._id}
+                          onClick={() => {
+                            handleCategoryFilter(cat._id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="block hover:text-secondary text-sm w-full text-left"
+                        >
+                          {cat.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-blue-400">
+                    <p className="font-semibold mb-2">Shop by Gender</p>
+                    <div className="space-y-1 ml-4">
+                      {['male', 'female', 'unisex'].map((gender) => (
+                        <button
+                          key={gender}
+                          onClick={() => {
+                            handleGenderFilter(gender);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="block hover:text-secondary text-sm w-full text-left capitalize"
+                        >
+                          {gender}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Link href="/contact" className="block pt-3 border-t border-blue-400 hover:text-secondary">
+                    Contact Us
                   </Link>
-                  {user.role !== 'customer' && (
-                    <Link href="/admin" className="block text-white text-sm font-medium hover:text-secondary">
-                      Admin Dashboard
-                    </Link>
-                  )}
-                  <button onClick={logout} className="w-full text-left text-white text-sm font-medium hover:text-secondary">
+                  <Link href="/stores" className="block hover:text-secondary">
+                    Store Locator
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full mt-4 bg-red-500 text-white px-4 py-2 rounded font-medium hover:bg-red-600"
+                  >
                     Logout
                   </button>
-                </>
+                </div>
               ) : (
-                <>
-                  <Link href="/auth/login" className="block text-white text-sm font-medium hover:text-secondary">
+                <div className="space-y-3">
+                  <Link href="/auth/login" className="block bg-secondary text-white px-4 py-2 rounded text-center font-medium">
                     Login
                   </Link>
-                  <Link href="/auth/signup" className="block bg-secondary text-white px-4 py-2 rounded text-sm font-medium text-center">
+                  <Link href="/auth/signup" className="block bg-white text-primary px-4 py-2 rounded text-center font-medium border-2 border-primary">
                     Sign Up
                   </Link>
-                </>
+                </div>
               )}
             </div>
           )}
         </div>
       </header>
 
-      {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-primary via-blue-600 to-primary text-white p-6 md:p-12 mb-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">Welcome to Ziya Creations</h1>
-          <p className="text-lg md:text-xl opacity-90">Discover amazing products at unbeatable prices</p>
+      {/* Floating Banner Carousel */}
+      {banners.length > 0 && (
+        <div className="relative h-64 md:h-80 bg-gray-200 overflow-hidden">
+          <div className="relative h-full">
+            {banners.map((banner, idx) => (
+              <div
+                key={banner._id}
+                className={`absolute inset-0 transition-opacity duration-500 ${
+                  idx === currentBannerIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <h2 className="text-3xl md:text-4xl font-bold mb-2">{banner.title}</h2>
+                    <p className="text-lg md:text-xl mb-4">{banner.description}</p>
+                    {banner.link && (
+                      <Link href={banner.link} className="bg-secondary text-white px-6 py-2 rounded font-semibold hover:opacity-90">
+                        Shop Now
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Banner Navigation */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {banners.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentBannerIndex(idx)}
+                  className={`w-3 h-3 rounded-full transition ${
+                    idx === currentBannerIndex ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* Sidebar - Categories */}
-          <div className="md:col-span-1">
-            <div className="bg-white rounded shadow-sm sticky top-24">
-              <div className="bg-primary text-white p-4 font-bold rounded-t">
-                Categories
-              </div>
-              <div className="p-4 space-y-2">
-                <button
-                  onClick={() => handleCategoryChange('')}
-                  className={`w-full text-left px-4 py-3 rounded text-sm font-medium transition transform hover:scale-105 ${
-                    selectedCategory === ''
-                      ? 'bg-primary text-white'
-                      : 'text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  All Products
-                </button>
-                {categories.map((category) => (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-12 h-12 border-4 border-primary border-t-secondary rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading amazing products...</p>
+          </div>
+        ) : (
+          <>
+            {/* Product Categories Carousel */}
+            {categories.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Shop by Category</h2>
+                <div className="flex gap-4 overflow-x-auto pb-4">
                   <button
-                    key={category._id}
-                    onClick={() => handleCategoryChange(category._id)}
-                    className={`w-full text-left px-4 py-3 rounded text-sm font-medium transition transform hover:scale-105 ${
-                      selectedCategory === category._id
+                    onClick={() => handleCategoryFilter('')}
+                    className={`flex-shrink-0 px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition ${
+                      selectedCategory === ''
                         ? 'bg-primary text-white'
-                        : 'text-gray-900 hover:bg-gray-50'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                     }`}
                   >
-                    {category.name}
+                    All
                   </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Products Grid */}
-          <div className="md:col-span-4">
-            <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                {selectedCategory ? 'Category Products' : 'All Products'}
-              </h2>
-              {!loading && products.length > 0 && (
-                <span className="text-sm text-gray-600 font-medium">
-                  {products.length} products
-                </span>
-              )}
-            </div>
-
-            {loading ? (
-              <div className="text-center py-16">
-                <div className="inline-block">
-                  <div className="w-12 h-12 border-4 border-primary border-t-secondary rounded-full animate-spin"></div>
+                  {categories.map((category) => (
+                    <button
+                      key={category._id}
+                      onClick={() => handleCategoryFilter(category._id)}
+                      className={`flex-shrink-0 px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition ${
+                        selectedCategory === category._id
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
                 </div>
-                <p className="mt-4 text-gray-600 font-medium">Loading amazing products...</p>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded shadow-sm">
-                <p className="text-lg font-medium text-gray-600 mb-4">No products found</p>
-                <button
-                  onClick={() => handleCategoryChange('')}
-                  className="bg-primary text-white px-6 py-2 rounded font-semibold hover:opacity-90 transition"
-                >
-                  View All Products
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {products.map((product) => (
-                  <ProductCard 
-                    key={product._id} 
-                    product={product}
-                    isWishlisted={wishlist.has(product._id)}
-                    onWishlistToggle={() => toggleWishlist(product._id)}
-                  />
-                ))}
               </div>
             )}
+
+            {/* Shop by Gender */}
+            <div className="mb-12 flex gap-3">
+              {['male', 'female', 'unisex'].map((gender) => (
+                <button
+                  key={gender}
+                  onClick={() => handleGenderFilter(gender)}
+                  className={`px-6 py-2 rounded-lg font-semibold capitalize transition ${
+                    selectedGender === gender
+                      ? 'bg-secondary text-white'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  {gender}
+                </button>
+              ))}
+            </div>
+
+            {/* Best Sellers Carousel */}
+            {bestSellers.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Best Sellers</h2>
+                <div className="relative">
+                  <div className="overflow-hidden">
+                    <div className="transition-transform duration-500" style={{ transform: `translateX(-${bestSellerIndex * 100}%)` }}>
+                      <div className="flex">
+                        {bestSellers.map((product) => (
+                          <div key={product._id} className="w-full flex-shrink-0">
+                            <ProductCardLarge product={product} isWishlisted={wishlist.has(product._id)} onWishlistToggle={() => toggleWishlist(product._id)} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={() => setBestSellerIndex((prev) => (prev - 1 + bestSellers.length) % bestSellers.length)}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-primary text-white p-2 rounded-full hover:opacity-90"
+                  >
+                    <ChevronRight size={24} className="rotate-180" />
+                  </button>
+                  <button
+                    onClick={() => setBestSellerIndex((prev) => (prev + 1) % bestSellers.length)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-primary text-white p-2 rounded-full hover:opacity-90"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* All Products */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">All Products</h2>
+              {products.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <p className="text-gray-600 mb-4">No products found</p>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setSelectedGender('');
+                      fetchProducts();
+                    }}
+                    className="bg-primary text-white px-6 py-2 rounded font-semibold hover:opacity-90"
+                  >
+                    View All Products
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product._id}
+                      product={product}
+                      isWishlisted={wishlist.has(product._id)}
+                      onWishlistToggle={() => toggleWishlist(product._id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white mt-12 pt-8 pb-4">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-xl font-bold mb-4">Ziya</h3>
+              <p className="text-gray-400 text-sm">Premium lifestyle products for everyone.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="/stores" className="hover:text-white">Store Locator</Link></li>
+                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
+                <li><Link href="/about" className="hover:text-white">About Us</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Customer Support</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
+                <li><Link href="/shipping" className="hover:text-white">Shipping Info</Link></li>
+                <li><Link href="/returns" className="hover:text-white">Returns</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li className="flex gap-2"><Phone size={16} /> +91-XXX-XXX-XXXX</li>
+                <li className="flex gap-2"><Mail size={16} /> support@ziya.com</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-700 pt-6 text-center text-sm text-gray-400">
+            <p>&copy; 2024 Ziya Creations. All rights reserved.</p>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
 
-interface ProductCardProps {
-  product: Product;
-  isWishlisted: boolean;
-  onWishlistToggle: () => void;
-}
-
-function ProductCard({ product, isWishlisted, onWishlistToggle }: ProductCardProps) {
+function ProductCard({ product, isWishlisted, onWishlistToggle }: any) {
   const discount = product.discountedPrice
     ? Math.round(((product.price - product.discountedPrice) / product.price) * 100)
     : 0;
 
   return (
-    <div className="bg-white rounded shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group flex flex-col h-full">
-      {/* Image Container */}
+    <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group flex flex-col h-full">
       <Link href={`/products/${product.slug}`} className="block relative flex-shrink-0">
         <div className="aspect-square bg-gray-100 flex items-center justify-center relative overflow-hidden">
           {product.images?.[0] ? (
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            />
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
           ) : (
-            <div className="text-gray-400 text-center">
-              <p className="text-sm">No Image</p>
-            </div>
+            <div className="text-gray-400">No Image</div>
           )}
           {discount > 0 && (
-            <div className="absolute top-3 right-3 bg-secondary text-white px-2 py-1 rounded text-xs font-bold shadow-lg">
+            <div className="absolute top-3 right-3 bg-secondary text-white px-2 py-1 rounded text-xs font-bold">
               {discount}% OFF
-            </div>
-          )}
-          {product.stock <= 0 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="text-white font-bold">Out of Stock</span>
             </div>
           )}
         </div>
       </Link>
 
-      {/* Wishlist Button */}
       <button
         onClick={onWishlistToggle}
         className="absolute top-3 left-3 z-10 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition"
       >
-        <Heart
-          size={18}
-          className={`transition ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'}`}
-        />
+        <Heart size={18} className={`transition ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
       </button>
 
-      {/* Content */}
       <Link href={`/products/${product.slug}`} className="flex-1 p-4 flex flex-col">
         <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 mb-3 group-hover:text-primary transition">
           {product.name}
@@ -381,36 +539,84 @@ function ProductCard({ product, isWishlisted, onWishlistToggle }: ProductCardPro
         <div className="flex items-center gap-2 mb-3">
           {product.discountedPrice ? (
             <>
-              <span className="text-lg font-bold text-primary">
-                ₹{product.discountedPrice.toLocaleString()}
-              </span>
-              <span className="text-sm text-gray-500 line-through">
-                ₹{product.price.toLocaleString()}
-              </span>
+              <span className="text-lg font-bold text-primary">₹{product.discountedPrice.toLocaleString()}</span>
+              <span className="text-sm text-gray-500 line-through">₹{product.price.toLocaleString()}</span>
             </>
           ) : (
-            <span className="text-lg font-bold text-primary">
-              ₹{product.price.toLocaleString()}
-            </span>
+            <span className="text-lg font-bold text-primary">₹{product.price.toLocaleString()}</span>
           )}
         </div>
 
         <div className="flex items-center gap-2 mt-auto">
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-semibold text-yellow-500">★</span>
-            <span className="text-sm font-medium text-gray-900">{product.rating.toFixed(1)}</span>
-          </div>
-          {product.reviewCount > 0 && (
-            <span className="text-xs text-gray-500">({product.reviewCount})</span>
-          )}
+          <span className="text-yellow-500">★</span>
+          <span className="text-sm font-medium text-gray-900">{product.rating.toFixed(1)}</span>
+          {product.reviewCount > 0 && <span className="text-xs text-gray-500">({product.reviewCount})</span>}
         </div>
       </Link>
 
-      {/* Add to Cart Button - Shows on hover */}
       <div className="px-4 pb-4">
         <button className="w-full bg-secondary text-white py-2 rounded font-semibold hover:opacity-90 transition text-sm">
           View Details
         </button>
+      </div>
+    </div>
+  );
+}
+
+function ProductCardLarge({ product, isWishlisted, onWishlistToggle }: any) {
+  const discount = product.discountedPrice ? Math.round(((product.price - product.discountedPrice) / product.price) * 100) : 0;
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row h-80 md:h-96">
+      <Link href={`/products/${product.slug}`} className="flex-1 relative overflow-hidden group">
+        {product.images?.[0] ? (
+          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">No Image</div>
+        )}
+        {discount > 0 && (
+          <div className="absolute top-4 right-4 bg-secondary text-white px-3 py-1 rounded text-sm font-bold">
+            {discount}% OFF
+          </div>
+        )}
+        <button onClick={onWishlistToggle} className="absolute top-4 left-4 bg-white rounded-full p-2 shadow-md hover:shadow-lg">
+          <Heart size={20} className={`transition ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+        </button>
+      </Link>
+
+      <div className="flex-1 p-6 flex flex-col justify-between">
+        <div>
+          <Link href={`/products/${product.slug}`}>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2 hover:text-primary transition">
+              {product.name}
+            </h3>
+          </Link>
+          <p className="text-gray-600 text-sm mb-4">{product.reviewCount} reviews</p>
+        </div>
+
+        <div className="flex items-center gap-3 mb-4">
+          {product.discountedPrice ? (
+            <>
+              <span className="text-3xl font-bold text-primary">₹{product.discountedPrice.toLocaleString()}</span>
+              <span className="text-lg text-gray-500 line-through">₹{product.price.toLocaleString()}</span>
+            </>
+          ) : (
+            <span className="text-3xl font-bold text-primary">₹{product.price.toLocaleString()}</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={16} className={i < Math.round(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-gray-900">{product.rating.toFixed(1)}</span>
+        </div>
+
+        <Link href={`/products/${product.slug}`} className="w-full bg-secondary text-white py-3 rounded-lg font-bold hover:opacity-90 transition text-center">
+          Shop Now
+        </Link>
       </div>
     </div>
   );
