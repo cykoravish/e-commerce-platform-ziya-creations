@@ -1,0 +1,30 @@
+import { connectDB } from '@/lib/db';
+import Store from '@/lib/models/Store';
+import { createResponse, createErrorResponse } from '@/lib/auth';
+import { NextRequest } from 'next/server';
+
+export async function GET(req: NextRequest) {
+  try {
+    await connectDB();
+    const stores = await Store.find({ isActive: true }).sort({ city: 1 });
+    return createResponse('Stores fetched successfully', stores, 200);
+  } catch (error: any) {
+    console.error('[v0] Get stores error:', error);
+    return createErrorResponse('Failed to fetch stores', 500, 'SERVER_ERROR');
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
+    const body = await req.json();
+
+    const newStore = new Store(body);
+    await newStore.save();
+
+    return createResponse('Store created successfully', newStore, 201);
+  } catch (error: any) {
+    console.error('[v0] Create store error:', error);
+    return createErrorResponse('Failed to create store', 500, 'SERVER_ERROR');
+  }
+}
