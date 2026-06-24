@@ -7,10 +7,12 @@ export interface IProduct extends mongoose.Document {
   price: number;
   discountedPrice?: number;
   category: mongoose.Types.ObjectId;
+  gender: 'male' | 'female' | 'unisex';
   images: string[];
   stock: number;
   rating: number;
   reviewCount: number;
+  totalSold: number;
   sku: string;
   isActive: boolean;
   createdAt: Date;
@@ -25,10 +27,12 @@ const productSchema = new mongoose.Schema<IProduct>(
     price: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, min: 0 },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
+    gender: { type: String, enum: ['male', 'female', 'unisex'], default: 'unisex' },
     images: [{ type: String }],
     stock: { type: Number, required: true, default: 0, min: 0 },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
+    totalSold: { type: Number, default: 0, min: 0 },
     sku: { type: String, required: true, unique: true, index: true },
     isActive: { type: Boolean, default: true },
   },
