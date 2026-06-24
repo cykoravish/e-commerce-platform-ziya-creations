@@ -48,6 +48,7 @@ export default function Home() {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [categoryScrollIndex, setCategoryScrollIndex] = useState(0);
   const [bestSellerIndex, setBestSellerIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const { user, logout } = useAuth();
   const { items: cart } = useCart();
 
@@ -135,6 +136,25 @@ export default function Home() {
     fetchProducts(selectedCategory, gender);
   };
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim().length > 0) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/products?search=${encodeURIComponent(query)}&limit=20`
+        );
+        const data = await response.json();
+        if (data.statusCode === 'SUCCESS') {
+          setProducts(data.data?.products || []);
+        }
+      } catch (error) {
+        console.error('[v0] Search error:', error);
+      }
+    } else {
+      fetchProducts();
+    }
+  };
+
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) => {
       const newWishlist = new Set(prev);
@@ -157,21 +177,25 @@ export default function Home() {
             </Link>
 
             {/* Search Bar */}
-            <div className="flex-1 hidden md:block max-w-md">
+            <div className="flex-1 hidden md:block max-w-md mx-4">
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search for products..."
-                  className="w-full px-4 py-2 rounded text-sm text-gray-900"
+                  placeholder="Search products, brands..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg text-sm text-gray-900 bg-white border-2 border-white focus:outline-none focus:border-secondary placeholder-gray-500"
                 />
-                <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                  <Search size={18} />
+                </button>
               </div>
             </div>
 
             {/* Right Icons */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-4">
               <Link href="/wishlist" className="relative text-white hover:text-secondary transition">
-                <Heart size={24} fill={wishlist.size > 0 ? 'currentColor' : 'none'} />
+                <Heart size={22} fill={wishlist.size > 0 ? 'currentColor' : 'none'} />
                 {wishlist.size > 0 && (
                   <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {wishlist.size}
@@ -179,13 +203,64 @@ export default function Home() {
                 )}
               </Link>
               <Link href="/cart" className="relative text-white hover:text-secondary transition">
-                <ShoppingCart size={24} />
+                <ShoppingCart size={22} />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {cartCount}
                   </span>
                 )}
               </Link>
+              
+              {user ? (
+                <div className="relative group">
+                  <button className="flex items-center gap-2 text-white hover:text-secondary transition">
+                    <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-gray-900 text-sm">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                    {user.role !== 'customer' && (
+                      <span className="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full font-bold">
+                        {user.role === 'super_admin' ? 'ADMIN' : 'STAFF'}
+                      </span>
+                    )}
+                  </button>
+                  <div className="absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition z-50">
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <p className="font-semibold text-gray-900">{user.name}</p>
+                      <p className="text-xs text-gray-600">{user.email}</p>
+                      <p className="text-xs text-secondary font-bold capitalize mt-1">{user.role.replace('_', ' ')}</p>
+                    </div>
+                    <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      My Orders
+                    </Link>
+                    <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      My Account
+                    </Link>
+                    {user.role !== 'customer' && (
+                      <Link href="/admin" className="block px-4 py-2 text-sm text-secondary font-semibold hover:bg-gray-50 border-t border-gray-200">
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 border-t border-gray-200"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-white text-sm font-medium hover:text-secondary transition">
+                    Login
+                  </Link>
+                  <Link href="/auth/signup" className="bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -196,98 +271,113 @@ export default function Home() {
 
           {/* Mobile Search & Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden pb-4 border-t border-blue-400 pt-4 space-y-4 animate-in fade-in slide-in-from-top">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full px-4 py-2 rounded text-sm text-gray-900"
-                />
-                <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="md:hidden pb-4 border-t border-blue-400 pt-4 max-h-[calc(100vh-64px)] overflow-y-auto animate-in fade-in slide-in-from-top">
+              <div className="px-0 space-y-3">
+                <div className="relative mx-0">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg text-sm text-gray-900 border-2 border-white focus:outline-none focus:border-secondary"
+                  />
+                  <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                </div>
+
+                {user ? (
+                  <div className="space-y-0 text-white text-sm">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-blue-700 rounded-lg mb-2">
+                      <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-gray-900 text-base">
+                        {user.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-xs text-blue-100">{user.email}</p>
+                      </div>
+                      {user.role !== 'customer' && (
+                        <span className="bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full">
+                          {user.role === 'super_admin' ? 'ADMIN' : 'STAFF'}
+                        </span>
+                      )}
+                    </div>
+
+                    <Link href="/orders" className="block px-4 py-2.5 hover:bg-blue-700 rounded">
+                      My Orders
+                    </Link>
+                    <Link href="/track-order" className="block px-4 py-2.5 hover:bg-blue-700 rounded">
+                      Track Order
+                    </Link>
+                    
+                    <div className="pt-2 px-4 border-t border-blue-500">
+                      <p className="font-semibold mb-2 mt-2">Shop by Category</p>
+                      <div className="space-y-1 ml-2">
+                        {categories.map((cat) => (
+                          <button
+                            key={cat._id}
+                            onClick={() => {
+                              handleCategoryFilter(cat._id);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="block hover:text-secondary text-sm w-full text-left py-1"
+                          >
+                            • {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 px-4 border-t border-blue-500">
+                      <p className="font-semibold mb-2 mt-2">Shop by Gender</p>
+                      <div className="space-y-1 ml-2">
+                        {['male', 'female', 'unisex'].map((gender) => (
+                          <button
+                            key={gender}
+                            onClick={() => {
+                              handleGenderFilter(gender);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="block hover:text-secondary text-sm w-full text-left py-1 capitalize"
+                          >
+                            • {gender}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Link href="/contact" className="block px-4 py-2.5 mt-2 border-t border-blue-500 hover:bg-blue-700 rounded">
+                      Contact Us
+                    </Link>
+                    <Link href="/stores" className="block px-4 py-2.5 hover:bg-blue-700 rounded">
+                      Store Locator
+                    </Link>
+
+                    {user.role !== 'customer' && (
+                      <Link href="/admin" className="block px-4 py-2.5 bg-secondary text-white font-semibold hover:opacity-90 rounded mt-2">
+                        Admin Dashboard
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full mt-3 bg-red-500 text-white px-4 py-2.5 rounded font-medium hover:bg-red-600"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 px-4">
+                    <Link href="/auth/login" className="block bg-secondary text-white px-4 py-2.5 rounded text-center font-medium hover:opacity-90">
+                      Login
+                    </Link>
+                    <Link href="/auth/signup" className="block bg-white text-primary px-4 py-2.5 rounded text-center font-medium border-2 border-primary hover:bg-gray-50">
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
               </div>
-
-              {user ? (
-                <div className="space-y-3 text-white text-sm">
-                  <div className="flex items-center gap-2 pb-3 border-b border-blue-400">
-                    <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-gray-900">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{user.name}</p>
-                      <p className="text-xs text-blue-100">{user.email}</p>
-                    </div>
-                  </div>
-
-                  <Link href="/orders" className="block hover:text-secondary">
-                    My Orders
-                  </Link>
-                  <Link href="/track-order" className="block hover:text-secondary">
-                    Track Order
-                  </Link>
-                  
-                  <div className="pt-3 border-t border-blue-400">
-                    <p className="font-semibold mb-2">Shop by Category</p>
-                    <div className="space-y-1 ml-4">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat._id}
-                          onClick={() => {
-                            handleCategoryFilter(cat._id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className="block hover:text-secondary text-sm w-full text-left"
-                        >
-                          {cat.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-blue-400">
-                    <p className="font-semibold mb-2">Shop by Gender</p>
-                    <div className="space-y-1 ml-4">
-                      {['male', 'female', 'unisex'].map((gender) => (
-                        <button
-                          key={gender}
-                          onClick={() => {
-                            handleGenderFilter(gender);
-                            setMobileMenuOpen(false);
-                          }}
-                          className="block hover:text-secondary text-sm w-full text-left capitalize"
-                        >
-                          {gender}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Link href="/contact" className="block pt-3 border-t border-blue-400 hover:text-secondary">
-                    Contact Us
-                  </Link>
-                  <Link href="/stores" className="block hover:text-secondary">
-                    Store Locator
-                  </Link>
-
-                  <button
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full mt-4 bg-red-500 text-white px-4 py-2 rounded font-medium hover:bg-red-600"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Link href="/auth/login" className="block bg-secondary text-white px-4 py-2 rounded text-center font-medium">
-                    Login
-                  </Link>
-                  <Link href="/auth/signup" className="block bg-white text-primary px-4 py-2 rounded text-center font-medium border-2 border-primary">
-                    Sign Up
-                  </Link>
-                </div>
-              )}
             </div>
           )}
         </div>

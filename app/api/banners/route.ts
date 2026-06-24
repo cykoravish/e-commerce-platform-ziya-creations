@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
     const banners = await Banner.find({ isActive: true }).sort({ displayOrder: 1 });
-    return createResponse('Banners fetched successfully', banners, 200);
+    return createResponse(banners,'Banners fetched successfully', 200);
   } catch (error: any) {
     console.error('[v0] Get banners error:', error);
     return createErrorResponse('Failed to fetch banners', 500, 'SERVER_ERROR');
