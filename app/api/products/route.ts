@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const category = searchParams.get('category');
+    const gender = searchParams.get('gender');
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || '-createdAt';
 
@@ -23,6 +24,10 @@ export async function GET(request: NextRequest) {
 
     if (category) {
       query.category = category;
+    }
+
+    if (gender) {
+      query.gender = gender;
     }
 
     if (search) {

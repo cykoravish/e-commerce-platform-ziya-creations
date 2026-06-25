@@ -7,12 +7,13 @@ import { NextRequest } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
     await connectDB();
 
-    const product = await Product.findOne({ slug: params.slug, isActive: true })
+    const product = await Product.findOne({ slug, isActive: true })
       .populate('category', 'name slug');
 
     if (!product) {
