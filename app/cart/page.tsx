@@ -1,145 +1,161 @@
 'use client';
 
-import { useCart } from '@/app/context/CartContext';
-import { useAuth } from '@/app/context/AuthContext';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Trash2, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { useCart } from '@/app/context/CartContext';
 
-export default function Cart() {
-  const { items, removeItem, updateQuantity, total } = useCart();
-  const { user } = useAuth();
-  const router = useRouter();
+interface CartItem {
+  _id: string;
+  name: string;
+  slug: string;
+  price: number;
+  discountedPrice?: number;
+  images?: string[];
+  quantity: number;
+}
 
-  const handleCheckout = () => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-    router.push('/checkout');
-  };
+export default function CartPage() {
+  const { items, removeItem, updateQuantity } = useCart();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(false);
+  }, []);
+
+  const subtotal = items.reduce((sum, item) => sum + ((item.discountedPrice || item.price) * item.quantity), 0);
+  const tax = Math.round(subtotal * 0.18);
+  const total = subtotal + tax;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-secondary rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <Link href="/" className="text-primary hover:underline mb-4 inline-block font-medium">
-          ← Back to Shopping
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <Link href="/" className="inline-flex items-center gap-2 text-primary hover:text-secondary mb-6">
+          <ArrowLeft size={20} />
+          Continue Shopping
         </Link>
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">My Shopping Cart</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Cart Items */}
-          <div className="lg:col-span-2">
-            {items.length === 0 ? (
-              <div className="bg-white rounded border border-gray-200 p-12 text-center">
-                <div className="text-6xl mb-4">🛒</div>
-                <p className="text-gray-600 text-lg mb-6">Your cart is empty. Start shopping!</p>
-                <Link
-                  href="/"
-                  className="inline-block px-8 py-3 bg-primary text-white rounded font-semibold hover:opacity-90 transition"
-                >
-                  Continue Shopping
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {items.map((item, idx) => (
-                  <div key={item.productId} className="bg-white rounded border border-gray-200 p-4 hover:shadow-md transition">
+        {items.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <ShoppingCart size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-600 text-lg mb-4">Your cart is empty</p>
+            <Link href="/" className="inline-block bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary">
+              Start Shopping
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow">
+                {items.map((item, index) => (
+                  <div key={item._id} className={`p-6 border-b ${index === items.length - 1 ? 'border-b-0' : ''}`}>
                     <div className="flex gap-4">
-                      {item.image && (
-                        <div className="w-24 h-24 bg-gray-100 rounded border border-gray-200 flex-shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        </div>
+                      {item.images?.[0] && (
+                        <img
+                          src={item.images[0]}
+                          alt={item.name}
+                          className="w-24 h-24 object-cover rounded"
+                        />
                       )}
                       <div className="flex-1">
-                        <Link href={`/products/${item.slug}`} className="font-semibold text-gray-800 hover:text-primary transition line-clamp-2">
+                        <Link href={`/products/${item.slug}`} className="font-semibold text-gray-900 hover:text-primary">
                           {item.name}
                         </Link>
-                        <p className="text-primary font-bold text-lg mt-1">₹{item.price}</p>
-                        <p className="text-xs text-gray-500 mt-1">Item {idx + 1}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center border border-gray-300 rounded">
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-lg font-bold text-primary">₹{item.discountedPrice || item.price}</span>
+                          {item.discountedPrice && (
+                            <span className="text-sm text-gray-500 line-through">₹{item.price}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 mt-4">
+                          <div className="flex items-center border rounded">
+                            <button
+                              onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                              className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                            >
+                              −
+                            </button>
+                            <span className="px-4 py-1">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                              className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                            >
+                              +
+                            </button>
+                          </div>
                           <button
-                            onClick={() => {
-                              if (item.quantity > 1) {
-                                updateQuantity(item.productId, item.quantity - 1);
-                              }
-                            }}
-                            className="px-3 py-1 hover:bg-gray-100 text-gray-700 font-bold"
+                            onClick={() => removeItem(item._id)}
+                            className="text-red-600 hover:text-red-700"
                           >
-                            −
-                          </button>
-                          <span className="px-4 py-1 border-l border-r border-gray-300 font-semibold min-w-12 text-center">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="px-3 py-1 hover:bg-gray-100 text-gray-700 font-bold"
-                          >
-                            +
+                            <Trash2 size={20} />
                           </button>
                         </div>
-                        <p className="font-bold text-gray-800">₹{(item.price * item.quantity).toFixed(2)}</p>
-                        <button
-                          onClick={() => removeItem(item.productId)}
-                          className="text-secondary text-sm font-medium hover:underline"
-                        >
-                          Remove
-                        </button>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">₹{((item.discountedPrice || item.price) * item.quantity).toFixed(0)}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Cart Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded border border-gray-200 p-6 sticky top-24">
-              <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-3">Price Details</h2>
-              <div className="space-y-3 mb-4 text-sm">
-                <div className="flex justify-between text-gray-700">
-                  <span>Price ({items.length} item{items.length !== 1 ? 's' : ''})</span>
-                  <span className="font-medium">₹{total.toFixed(2)}</span>
+            {/* Order Summary */}
+            <div>
+              <div className="bg-white rounded-lg shadow p-6 sticky top-20">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+
+                <div className="space-y-3 pb-4 border-b">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal.toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Tax (18%)</span>
+                    <span>₹{tax}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Shipping</span>
+                    <span className="text-green-600 font-semibold">FREE</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-gray-700">
-                  <span>Discount</span>
-                  <span className="text-secondary font-medium">No discount</span>
-                </div>
-                <div className="flex justify-between text-gray-700">
-                  <span>Shipping Fee</span>
-                  <span className="text-green-600 font-medium">Free</span>
-                </div>
-              </div>
-              <div className="border-t pt-4 mb-6">
-                <div className="flex justify-between font-bold text-lg text-gray-800">
+
+                <div className="flex justify-between text-lg font-bold text-gray-900 mt-4 mb-6">
                   <span>Total</span>
-                  <span className="text-primary">₹{total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(0)}</span>
                 </div>
+
+                <Link
+                  href="/checkout"
+                  className="block w-full bg-primary text-white py-3 rounded-lg font-semibold text-center hover:bg-secondary transition"
+                >
+                  Proceed to Checkout
+                </Link>
+
+                <Link
+                  href="/"
+                  className="block w-full mt-3 border border-primary text-primary py-2 rounded-lg text-center hover:bg-primary hover:text-white transition"
+                >
+                  Continue Shopping
+                </Link>
               </div>
-              <button
-                onClick={handleCheckout}
-                disabled={items.length === 0}
-                className="w-full px-6 py-3 bg-secondary text-white font-bold rounded hover:opacity-90 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Proceed to Checkout
-              </button>
-              <Link
-                href="/"
-                className="block text-center mt-4 text-primary font-medium hover:underline"
-              >
-                Continue Shopping
-              </Link>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
