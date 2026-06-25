@@ -126,14 +126,16 @@ export default function Home() {
   };
 
   const handleCategoryFilter = (categoryId: string) => {
-    setSelectedCategory(categoryId);
+    const newCategory = categoryId === selectedCategory ? '' : categoryId;
+    setSelectedCategory(newCategory);
     setSelectedGender('');
-    fetchProducts(categoryId, '');
+    fetchProducts(newCategory, '');
   };
 
   const handleGenderFilter = (gender: string) => {
-    setSelectedGender(gender);
-    fetchProducts(selectedCategory || undefined, gender);
+    const newGender = gender === selectedGender ? '' : gender;
+    setSelectedGender(newGender);
+    fetchProducts(selectedCategory || undefined, newGender);
   };
 
   const handleSearch = async (query: string) => {
