@@ -39,7 +39,13 @@ export default function EditCategoryPage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${params.id}`);
         const data = await response.json();
 
-        if (data.statusCode === 'SUCCESS' && data.data) {
+        if (!response.ok) {
+          setError(data.message || 'Category not found');
+          setLoading(false);
+          return;
+        }
+
+        if (data.data) {
           setFormData({
             name: data.data.name,
             description: data.data.description || '',
