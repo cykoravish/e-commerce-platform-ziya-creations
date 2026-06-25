@@ -530,12 +530,32 @@ export default function Home() {
               </div>
             )}
 
-            {/* All Products */}
+            {/* Products Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">All Products</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedCategory || selectedGender ? 'Filtered Products' : 'All Products'}
+                </h2>
+                {(selectedCategory || selectedGender) && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setSelectedGender('');
+                      fetchProducts();
+                    }}
+                    className="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-medium"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
               {products.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <p className="text-gray-600 mb-4">No products found</p>
+                  <p className="text-gray-600 mb-4">
+                    {selectedCategory || selectedGender
+                      ? 'No products found for selected filters'
+                      : 'No products found'}
+                  </p>
                   <button
                     onClick={() => {
                       setSelectedCategory('');
