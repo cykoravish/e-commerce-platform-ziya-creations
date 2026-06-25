@@ -16,3 +16,42 @@ export async function GET(request: NextRequest) {
     return createErrorResponse('Failed to fetch categories', 500, 'SERVER_ERROR');
   }
 }
+
+// Create new category
+export async function POST(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const body = await request.json();
+    const { name, description } = body;
+
+    if (!name || name.trim() === '') {
+      return createErrorResponse('Category name is required', 400, 'VALIDATION_ERROR');
+    }
+
+    // Create slug from name
+    const slug = name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+    // Check if category already exists
+    const existing = await Category.findOne({ slug });
+    if (existing) {
+      return createErrorResponse('Category already exists', 400, 'DUPLICATE_ERROR');
+    }
+
+    const category = await Category.create({
+      name,
+      slug,
+      description: description || '',
+      isActive: true,
+    });
+
+    return createResponse(category, 'Category created successfully', 201, 'SUCCESS');
+  } catch (error) {
+    console.error('[v0] Create category error:', error);
+    return createErrorResponse('Failed to create category', 500, 'SERVER_ERROR');
+  }
+}
