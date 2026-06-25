@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload, X } from 'lucide-react';
 
 interface Category {
   _id: string;
@@ -15,6 +15,8 @@ export default function CreateProductPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -24,7 +26,6 @@ export default function CreateProductPage() {
     gender: 'unisex',
     stock: '',
     sku: '',
-    images: '',
   });
 
   useEffect(() => {
@@ -48,10 +49,43 @@ export default function CreateProductPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setUploadedImages((prev) => [...prev, event.target.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addImageUrl = () => {
+    if (imageUrls.trim()) {
+      const urls = imageUrls.split(',').map((url) => url.trim()).filter(Boolean);
+      setUploadedImages((prev) => [...prev, ...urls]);
+      setImageUrls('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (uploadedImages.length === 0) {
+      setError('Please add at least one product image');
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -60,7 +94,7 @@ export default function CreateProductPage() {
         price: Number(formData.price),
         discountedPrice: formData.discountedPrice ? Number(formData.discountedPrice) : undefined,
         stock: Number(formData.stock),
-        images: formData.images.split(',').map((url) => url.trim()).filter(Boolean),
+        images: uploadedImages,
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, {
@@ -85,20 +119,21 @@ export default function CreateProductPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Link href="/admin/products" className="inline-flex items-center gap-2 text-primary hover:text-secondary mb-6">
-        <ArrowLeft size={20} />
-        Back to Products
-      </Link>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-3xl mx-auto">
+        <Link href="/admin/products" className="inline-flex items-center gap-2 text-primary hover:text-secondary mb-6">
+          <ArrowLeft size={20} />
+          Back to Products
+        </Link>
 
-      <div className="bg-white rounded-lg shadow p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Create New Product</h1>
+        <div className="bg-white rounded-lg shadow p-6 md:p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Create New Product</h1>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">{error}</div>
-        )}
+          {error && (
+            <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">{error}</div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">Product Name *</label>
             <input
@@ -207,20 +242,70 @@ export default function CreateProductPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">Image URLs (comma-separated) *</label>
-            <textarea
-              name="images"
-              value={formData.images}
-              onChange={handleChange}
-              required
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Product Images *</label>
+              
+              {/* File Upload */}
+              <div className="mb-4">
+                <label className="block mb-2">
+                  <div className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-primary transition">
+                    <Upload size={20} className="text-gray-500" />
+                    <span className="text-gray-600">Click to upload images</span>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* URL Upload */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={imageUrls}
+                  onChange={(e) => setImageUrls(e.target.value)}
+                  placeholder="Paste image URL and click Add"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={addImageUrl}
+                  className="bg-secondary text-white px-4 py-2 rounded-lg hover:opacity-90"
+                >
+                  Add URL
+                </button>
+              </div>
+
+              {/* Image Preview */}
+              {uploadedImages.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {uploadedImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Preview ${index}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 mt-8">
             <button
               type="submit"
               disabled={loading}
@@ -233,6 +318,7 @@ export default function CreateProductPage() {
             </Link>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
