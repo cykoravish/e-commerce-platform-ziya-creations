@@ -81,6 +81,32 @@ export default function CreateProductPage() {
     setLoading(true);
     setError('');
 
+    // Validation
+    if (!formData.name.trim()) {
+      setError('Product name is required');
+      setLoading(false);
+      return;
+    }
+    if (!formData.description.trim()) {
+      setError('Product description is required');
+      setLoading(false);
+      return;
+    }
+    if (!formData.category) {
+      setError('Please select a category');
+      setLoading(false);
+      return;
+    }
+    if (!formData.price) {
+      setError('Product price is required');
+      setLoading(false);
+      return;
+    }
+    if (!formData.sku.trim()) {
+      setError('Product SKU is required');
+      setLoading(false);
+      return;
+    }
     if (uploadedImages.length === 0) {
       setError('Please add at least one product image');
       setLoading(false);
@@ -89,6 +115,14 @@ export default function CreateProductPage() {
 
     try {
       const token = localStorage.getItem('token');
+      console.log('[v0] Token from localStorage:', token ? 'Present' : 'Missing');
+      
+      if (!token) {
+        setError('No authentication token found. Please login again.');
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         ...formData,
         price: Number(formData.price),
@@ -96,6 +130,8 @@ export default function CreateProductPage() {
         stock: Number(formData.stock),
         images: uploadedImages,
       };
+
+      console.log('[v0] Sending product payload:', { ...payload, images: `[${payload.images.length} images]` });
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/create`, {
         method: 'POST',
@@ -106,8 +142,12 @@ export default function CreateProductPage() {
         body: JSON.stringify(payload),
       });
 
+      console.log('[v0] API Response status:', response.status);
+      const responseData = await response.json();
+      console.log('[v0] API Response:', responseData);
+
       if (!response.ok) {
-        throw new Error('Failed to create product');
+        throw new Error(responseData.message || 'Failed to create product');
       }
 
       router.push('/admin/products');
