@@ -17,6 +17,153 @@ interface Address {
   isDefault: boolean;
 }
 
+function AddressForm({
+  onSubmit,
+  onCancel,
+}: {
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    street: '',
+    city: '',
+    state: '',
+    pincode: '',
+    phone: '',
+    isDefault: false,
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target as any;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.street || !formData.city || !formData.pincode) {
+      alert('Please fill all required fields');
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="border rounded-lg p-4 bg-gray-50 space-y-4">
+      <h3 className="font-semibold mb-4">Add New Address</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Full Name *</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Your name"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Phone *</label>
+          <input
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="Phone number"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Address *</label>
+        <textarea
+          name="street"
+          value={formData.street}
+          onChange={handleChange}
+          placeholder="Street address"
+          rows={2}
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">City *</label>
+          <input
+            type="text"
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            placeholder="City"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">State</label>
+          <input
+            type="text"
+            name="state"
+            value={formData.state}
+            onChange={handleChange}
+            placeholder="State"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Pincode *</label>
+          <input
+            type="text"
+            name="pincode"
+            value={formData.pincode}
+            onChange={handleChange}
+            placeholder="Pincode"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="isDefault"
+          name="isDefault"
+          checked={formData.isDefault}
+          onChange={handleChange}
+          className="w-4 h-4 rounded"
+        />
+        <label htmlFor="isDefault" className="ml-2 text-sm">
+          Set as default address
+        </label>
+      </div>
+
+      <div className="flex gap-3 pt-4">
+        <button
+          type="submit"
+          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+        >
+          Save Address
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const { user, authToken } = useAuth();
@@ -70,6 +217,37 @@ export default function Checkout() {
     }
   };
 
+  const handleAddAddress = async (formData: any) => {
+    try {
+      console.log('[v0] Adding address with data:', formData);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user/addresses`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const data = await response.json();
+      console.log('[v0] Add address response:', data);
+
+      if (data.statusCode === 'CREATED') {
+        setSuccess('Address added successfully!');
+        setShowAddressForm(false);
+        fetchAddresses();
+      } else {
+        setError(data.message || 'Failed to add address');
+      }
+    } catch (err) {
+      console.error('[v0] Add address error:', err);
+      setError('Failed to add address');
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       setError('Please select an address');
@@ -81,6 +259,7 @@ export default function Checkout() {
     setOrderLoading(true);
 
     try {
+      console.log('[v0] Placing order with address:', selectedAddress);
       // Create order
       const orderResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/orders/create`,
@@ -101,9 +280,11 @@ export default function Checkout() {
       );
 
       const orderData = await orderResponse.json();
+      console.log('[v0] Order response:', orderData);
 
       if (!orderResponse.ok) {
         setError(orderData.message || 'Failed to place order');
+        setOrderLoading(false);
         return;
       }
 
@@ -117,11 +298,11 @@ export default function Checkout() {
         }, 1500);
       } else {
         setError(orderData.message || 'Failed to place order');
+        setOrderLoading(false);
       }
     } catch (err) {
       console.error('[v0] Place order error:', err);
       setError('An error occurred. Please try again.');
-    } finally {
       setOrderLoading(false);
     }
   };
@@ -163,11 +344,16 @@ export default function Checkout() {
                 </div>
               )}
 
-              {addresses.length === 0 ? (
+              {showAddressForm ? (
+                <AddressForm
+                  onSubmit={handleAddAddress}
+                  onCancel={() => setShowAddressForm(false)}
+                />
+              ) : addresses.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">No addresses found</p>
                   <button
-                    onClick={() => setShowAddressForm(!showAddressForm)}
+                    onClick={() => setShowAddressForm(true)}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
                     Add New Address
@@ -202,7 +388,7 @@ export default function Checkout() {
                     </label>
                   ))}
                   <button
-                    onClick={() => setShowAddressForm(!showAddressForm)}
+                    onClick={() => setShowAddressForm(true)}
                     className="w-full px-4 py-2 border-2 border-blue-600 text-blue-600 rounded hover:bg-blue-50 text-sm font-semibold"
                   >
                     + Add New Address
