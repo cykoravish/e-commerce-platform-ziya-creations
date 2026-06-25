@@ -3,6 +3,27 @@ import Product from '@/lib/models/Product';
 import { verifyAuth, createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
+// GET product by ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDB();
+
+    const product = await Product.findById(params.id).populate('category');
+
+    if (!product) {
+      return createErrorResponse('Product not found', 404, 'NOT_FOUND');
+    }
+
+    return createResponse(product, 'Product fetched successfully', 200, 'SUCCESS');
+  } catch (error) {
+    console.error('[v0] Get product error:', error);
+    return createErrorResponse('Failed to fetch product', 500, 'SERVER_ERROR');
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -41,17 +62,27 @@ export async function DELETE(
   try {
     const auth = await verifyAuth(request);
 
-    if (!auth || auth.role !== 'super_admin') {
-      return createErrorResponse('Only super admin can delete', 401, 'UNAUTHORIZED');
+    if (!auth) {
+      return createErrorResponse('Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     await connectDB();
 
-    const product = await Product.findByIdAndDelete(params.id);
+    const product = await Product.findById(params.id);
 
     if (!product) {
       return createErrorResponse('Product not found', 404, 'NOT_FOUND');
     }
+
+    // Allow super_admin to delete any product, or admin to delete their own
+    const isProductOwner = product.createdBy?.toString() === auth.id;
+    const isSuperAdmin = auth.role === 'super_admin';
+
+    if (!isSuperAdmin && !isProductOwner) {
+      return createErrorResponse('You can only delete your own products', 403, 'FORBIDDEN');
+    }
+
+    await Product.findByIdAndDelete(params.id);
 
     return createResponse(null, 'Product deleted successfully', 200, 'SUCCESS');
   } catch (error) {
