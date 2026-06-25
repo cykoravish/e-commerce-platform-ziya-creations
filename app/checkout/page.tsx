@@ -257,7 +257,11 @@ export default function Checkout() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={orderLoading || !selectedAddress}
-                className="w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition-all"
+                className={`w-full px-4 py-3 font-bold rounded-lg transition-all ${
+                  orderLoading || !selectedAddress
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                }`}
               >
                 {orderLoading ? 'Processing...' : 'Place Order'}
               </button>

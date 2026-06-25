@@ -89,15 +89,27 @@ export default function Home() {
   const fetchProducts = async (categoryId?: string, gender?: string) => {
     try {
       let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=12`;
-      if (categoryId) url += `&category=${categoryId}`;
-      if (gender) url += `&gender=${gender}`;
+
+      if (categoryId) {
+        url += `&category=${categoryId}`;
+      }
+
+      if (gender) {
+        url += `&gender=${gender}`;
+      }
+
       const response = await fetch(url);
       const data = await response.json();
+
       if (data.statusCode === 'SUCCESS') {
-        setProducts(data.data?.products || []);
+        const productList = data.data.products || data.data || [];
+        setProducts(productList);
+      } else {
+        setProducts([]);
       }
     } catch (error) {
       console.error('[v0] Fetch products error:', error);
+      setProducts([]);
     }
   };
 
