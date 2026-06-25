@@ -20,21 +20,25 @@ interface Address {
 function AddressForm({
   onSubmit,
   onCancel,
+  userEmail,
 }: {
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  userEmail?: string;
 }) {
   const [formData, setFormData] = useState({
     name: '',
+    phone: '',
+    email: userEmail || '',
     street: '',
     city: '',
     state: '',
     pincode: '',
-    phone: '',
+    type: 'home',
     isDefault: false,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as any;
     setFormData((prev) => ({
       ...prev,
@@ -44,7 +48,7 @@ function AddressForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.street || !formData.city || !formData.pincode) {
+    if (!formData.name || !formData.phone || !formData.email || !formData.street || !formData.city || !formData.state || !formData.pincode) {
       alert('Please fill all required fields');
       return;
     }
@@ -82,6 +86,18 @@ function AddressForm({
       </div>
 
       <div>
+        <label className="block text-sm font-medium mb-1">Email *</label>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Email address"
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
         <label className="block text-sm font-medium mb-1">Address *</label>
         <textarea
           name="street"
@@ -93,7 +109,7 @@ function AddressForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">City *</label>
           <input
@@ -107,7 +123,7 @@ function AddressForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">State</label>
+          <label className="block text-sm font-medium mb-1">State *</label>
           <input
             type="text"
             name="state"
@@ -117,7 +133,9 @@ function AddressForm({
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Pincode *</label>
           <input
@@ -128,6 +146,20 @@ function AddressForm({
             placeholder="Pincode"
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Address Type</label>
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="home">Home</option>
+            <option value="work">Work</option>
+            <option value="other">Other</option>
+          </select>
         </div>
       </div>
 
@@ -348,6 +380,7 @@ export default function Checkout() {
                 <AddressForm
                   onSubmit={handleAddAddress}
                   onCancel={() => setShowAddressForm(false)}
+                  userEmail={user?.email || ''}
                 />
               ) : addresses.length === 0 ? (
                 <div className="text-center py-8">
