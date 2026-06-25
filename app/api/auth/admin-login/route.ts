@@ -21,19 +21,10 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Invalid email or password', 401, 'INVALID_CREDENTIALS');
     }
 
-    // Only customers need email verification. Admins/Super Admins skip this
-    if (!user.isVerified && user.role === 'customer') {
-      return createErrorResponse('Please verify your email first', 403, 'NOT_VERIFIED');
-    }
-
-    // SECURITY: Reject admin/superadmin from customer login
-    if (user.role === 'admin' || user.role === 'super_admin') {
-      console.warn(`[v0] Admin login attempt from customer endpoint: ${email}`);
-      return createErrorResponse(
-        'Admin accounts cannot login from customer portal. Please use the admin login page.',
-        401,
-        'ADMIN_RESTRICTED'
-      );
+    // SECURITY: Only allow admin and super_admin roles
+    if (user.role !== 'admin' && user.role !== 'super_admin') {
+      console.warn(`[v0] Non-admin login attempt from email: ${email}`);
+      return createErrorResponse('Invalid email or password', 401, 'INVALID_CREDENTIALS');
     }
 
     // Compare password
@@ -61,12 +52,12 @@ export async function POST(request: NextRequest) {
           role: user.role,
         },
       },
-      'Login successful',
+      'Admin login successful',
       200,
       'SUCCESS'
     );
   } catch (error) {
-    console.error('[v0] Login error:', error);
+    console.error('[v0] Admin login error:', error);
     return createErrorResponse('Internal server error', 500, 'SERVER_ERROR');
   }
 }
