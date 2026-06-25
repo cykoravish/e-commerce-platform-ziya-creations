@@ -6,12 +6,13 @@ import { NextRequest } from 'next/server';
 // GET product by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
 
-    const product = await Product.findById(params.id).populate('category');
+    const product = await Product.findById(id).populate('category');
 
     if (!product) {
       return createErrorResponse('Product not found', 404, 'NOT_FOUND');
@@ -26,9 +27,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const auth = await verifyAuth(request);
 
     if (!auth || (auth.role !== 'admin' && auth.role !== 'super_admin')) {
@@ -39,7 +41,7 @@ export async function PUT(
 
     await connectDB();
 
-    const product = await Product.findByIdAndUpdate(params.id, body, {
+    const product = await Product.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     });
@@ -57,9 +59,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const auth = await verifyAuth(request);
 
     if (!auth) {
@@ -68,7 +71,7 @@ export async function DELETE(
 
     await connectDB();
 
-    const product = await Product.findById(params.id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return createErrorResponse('Product not found', 404, 'NOT_FOUND');
@@ -82,7 +85,7 @@ export async function DELETE(
       return createErrorResponse('You can only delete your own products', 403, 'FORBIDDEN');
     }
 
-    await Product.findByIdAndDelete(params.id);
+    await Product.findByIdAndDelete(id);
 
     return createResponse(null, 'Product deleted successfully', 200, 'SUCCESS');
   } catch (error) {
