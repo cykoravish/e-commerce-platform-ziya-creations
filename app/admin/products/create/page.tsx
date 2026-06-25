@@ -114,8 +114,7 @@ export default function CreateProductPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      console.log('[v0] Token from localStorage:', token ? 'Present' : 'Missing');
+      const token = localStorage.getItem('authToken');
       
       if (!token) {
         setError('No authentication token found. Please login again.');
@@ -131,8 +130,6 @@ export default function CreateProductPage() {
         images: uploadedImages,
       };
 
-      console.log('[v0] Sending product payload:', { ...payload, images: `[${payload.images.length} images]` });
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/create`, {
         method: 'POST',
         headers: {
@@ -142,9 +139,7 @@ export default function CreateProductPage() {
         body: JSON.stringify(payload),
       });
 
-      console.log('[v0] API Response status:', response.status);
       const responseData = await response.json();
-      console.log('[v0] API Response:', responseData);
 
       if (!response.ok) {
         throw new Error(responseData.message || 'Failed to create product');

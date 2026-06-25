@@ -52,14 +52,10 @@ export function getTokenFromRequest(request: NextRequest): string | null {
 // Middleware to verify auth
 export async function verifyAuth(request: NextRequest) {
   const token = getTokenFromRequest(request);
-  console.log('[v0] verifyAuth - Token extracted:', token ? 'Yes' : 'No');
   if (!token) {
-    console.log('[v0] verifyAuth - No token found in request');
     return null;
   }
-  const decoded = verifyToken(token);
-  console.log('[v0] verifyAuth - Token decoded:', decoded ? 'Yes' : 'No');
-  return decoded;
+  return verifyToken(token);
 }
 
 // Generate OTP
