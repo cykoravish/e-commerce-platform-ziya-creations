@@ -6,15 +6,9 @@ import { NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('[v0] Product create request received');
-    const authHeader = request.headers.get('authorization');
-    console.log('[v0] Auth header:', authHeader ? 'Present' : 'Missing');
-
     const auth = await verifyAuth(request);
-    console.log('[v0] Auth verification result:', auth ? `User ${auth.email} (${auth.role})` : 'Failed');
 
     if (!auth || (auth.role !== 'admin' && auth.role !== 'super_admin')) {
-      console.log('[v0] Authorization check failed:', { hasAuth: !!auth, role: auth?.role });
       return createErrorResponse('Unauthorized', 401, 'UNAUTHORIZED');
     }
 
