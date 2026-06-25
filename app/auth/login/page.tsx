@@ -82,12 +82,20 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center mt-6 text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="text-blue-600 hover:underline font-semibold">
-            Sign Up
-          </Link>
-        </p>
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-center text-sm text-gray-600 mb-4">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth/signup" className="text-blue-600 hover:underline font-semibold">
+              Sign Up
+            </Link>
+          </p>
+          <p className="text-center text-xs text-gray-600">
+            Admin or staff?{' '}
+            <Link href="/admin/login" className="text-purple-600 hover:underline font-semibold">
+              Admin Login
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
