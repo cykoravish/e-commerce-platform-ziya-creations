@@ -15,6 +15,7 @@ export interface IProduct extends mongoose.Document {
   totalSold: number;
   sku: string;
   isActive: boolean;
+  createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +36,7 @@ const productSchema = new mongoose.Schema<IProduct>(
     totalSold: { type: Number, default: 0, min: 0 },
     sku: { type: String, required: true, unique: true, index: true },
     isActive: { type: Boolean, default: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );

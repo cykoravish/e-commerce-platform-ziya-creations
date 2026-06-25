@@ -65,10 +65,15 @@ export default function EditProductPage() {
         }
 
         // Load product
-        const prodResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${params.id}`);
+        const token = localStorage.getItem('authToken');
+        const prodResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${params.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const prodData = await prodResponse.json();
 
-        if (prodData.data) {
+        if (prodData.statusCode === 'SUCCESS' && prodData.data) {
           const product = prodData.data;
           setFormData({
             name: product.name,
