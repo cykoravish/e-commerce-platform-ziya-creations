@@ -98,23 +98,12 @@ export default function Home() {
         url += `&gender=${gender}`;
       }
 
-      console.log('[v0] Fetching products from:', url);
       const response = await fetch(url);
       const data = await response.json();
 
-      console.log('[v0] API Response:', data);
-
-      if (data.statusCode === 'SUCCESS') {
-        let productList = [];
-        if (Array.isArray(data.data)) {
-          productList = data.data;
-        } else if (data.data && typeof data.data === 'object') {
-          productList = data.data.products || [];
-        }
-        console.log('[v0] Product list:', productList);
-        setProducts(productList);
+      if (data.statusCode === 'SUCCESS' && data.data) {
+        setProducts(data.data.products || []);
       } else {
-        console.log('[v0] API failed with status:', data.statusCode);
         setProducts([]);
       }
     } catch (error) {
@@ -127,14 +116,8 @@ export default function Home() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=5&sort=-totalSold`);
       const data = await response.json();
-      if (data.statusCode === 'SUCCESS') {
-        let bestSellersList = [];
-        if (Array.isArray(data.data)) {
-          bestSellersList = data.data;
-        } else if (data.data && typeof data.data === 'object') {
-          bestSellersList = data.data.products || [];
-        }
-        setBestSellers(bestSellersList);
+      if (data.statusCode === 'SUCCESS' && data.data) {
+        setBestSellers(data.data.products || []);
       }
     } catch (error) {
       console.error('[v0] Fetch best sellers error:', error);
@@ -174,8 +157,8 @@ export default function Home() {
           `${process.env.NEXT_PUBLIC_API_URL}/api/products?search=${encodeURIComponent(query)}&limit=20`
         );
         const data = await response.json();
-        if (data.statusCode === 'SUCCESS') {
-          setProducts(data.data?.products || []);
+        if (data.statusCode === 'SUCCESS' && data.data) {
+          setProducts(data.data.products || []);
         }
       } catch (error) {
         console.error('[v0] Search error:', error);
