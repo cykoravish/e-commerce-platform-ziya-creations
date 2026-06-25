@@ -97,7 +97,7 @@ export default function CreateProductPage() {
         images: uploadedImages,
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
