@@ -6,13 +6,12 @@ import { Trash2, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 
 interface CartItem {
-  _id: string;
+  productId: string;
   name: string;
-  slug: string;
+  slug?: string;
   price: number;
-  discountedPrice?: number;
-  images?: string[];
   quantity: number;
+  image?: string;
 }
 
 export default function CartPage() {
@@ -62,11 +61,11 @@ export default function CartPage() {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow">
                 {items.map((item, index) => (
-                  <div key={item._id} className={`p-6 border-b ${index === items.length - 1 ? 'border-b-0' : ''}`}>
+                  <div key={item.productId} className={`p-6 border-b ${index === items.length - 1 ? 'border-b-0' : ''}`}>
                     <div className="flex gap-4">
-                      {item.images?.[0] && (
+                      {item.image && (
                         <img
-                          src={item.images[0]}
+                          src={item.image}
                           alt={item.name}
                           className="w-24 h-24 object-cover rounded"
                         />
@@ -76,29 +75,30 @@ export default function CartPage() {
                           {item.name}
                         </Link>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="text-lg font-bold text-primary">₹{item.discountedPrice || item.price}</span>
-                          {item.discountedPrice && (
-                            <span className="text-sm text-gray-500 line-through">₹{item.price}</span>
-                          )}
+                          <span className="text-lg font-bold text-primary">₹{item.price}</span>
                         </div>
                         <div className="flex items-center gap-4 mt-4">
                           <div className="flex items-center border rounded">
                             <button
-                              onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                              onClick={() => {
+                                if (item.quantity > 1) {
+                                  updateQuantity(item.productId, item.quantity - 1);
+                                }
+                              }}
                               className="px-3 py-1 text-gray-600 hover:bg-gray-100"
                             >
                               −
                             </button>
                             <span className="px-4 py-1">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                               className="px-3 py-1 text-gray-600 hover:bg-gray-100"
                             >
                               +
                             </button>
                           </div>
                           <button
-                            onClick={() => removeItem(item._id)}
+                            onClick={() => removeItem(item.productId)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 size={20} />
