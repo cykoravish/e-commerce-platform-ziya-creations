@@ -12,21 +12,25 @@ interface Address {
   street: string;
   city: string;
   pincode: string;
+  phone?: string;
+  state?: string;
   isDefault: boolean;
 }
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
-  const { user, token } = useAuth();
+  const { user, authToken } = useAuth();
   const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [orderLoading, setOrderLoading] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !authToken) {
       router.push('/auth/login');
       return;
     }
@@ -35,28 +39,34 @@ export default function Checkout() {
       return;
     }
     fetchAddresses();
-  }, [user, items, router]);
+  }, [user, items, router, authToken]);
 
   const fetchAddresses = async () => {
     try {
+      setLoading(true);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/user/addresses`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
           },
         }
       );
       const data = await response.json();
-      if (data.statusCode === 'SUCCESS') {
+      if (data.statusCode === 'SUCCESS' && data.data) {
         setAddresses(data.data);
         const defaultAddr = data.data.find((a: Address) => a.isDefault);
         if (defaultAddr) {
           setSelectedAddress(defaultAddr._id);
         }
+      } else {
+        setError(data.message || 'Failed to load addresses');
       }
     } catch (error) {
       console.error('[v0] Fetch addresses error:', error);
+      setError('Failed to load addresses');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,7 +77,8 @@ export default function Checkout() {
     }
 
     setError('');
-    setLoading(true);
+    setSuccess('');
+    setOrderLoading(true);
 
     try {
       // Create order
@@ -77,7 +88,7 @@ export default function Checkout() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify({
             items: items.map((item) => ({
@@ -91,24 +102,42 @@ export default function Checkout() {
 
       const orderData = await orderResponse.json();
 
-      if (orderData.statusCode === 'CREATED') {
-        // In production, redirect to Razorpay checkout
-        // For now, simulate payment success
+      if (!orderResponse.ok) {
+        setError(orderData.message || 'Failed to place order');
+        return;
+      }
+
+      if (orderData.statusCode === 'CREATED' && orderData.data) {
+        setSuccess('Order placed successfully!');
+        // Clear cart and redirect to order page
         setTimeout(() => {
           clearCart();
-          router.push(`/orders/${orderData.data.order.orderId}`);
-        }, 1000);
+          const orderId = orderData.data.order?.orderId || orderData.data.orderId;
+          router.push(`/orders/${orderId}`);
+        }, 1500);
       } else {
         setError(orderData.message || 'Failed to place order');
       }
     } catch (err) {
+      console.error('[v0] Place order error:', err);
       setError('An error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setOrderLoading(false);
     }
   };
 
   if (!user) return null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-secondary rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading checkout...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,8 +152,14 @@ export default function Checkout() {
               <h2 className="text-xl font-bold mb-4">Delivery Address</h2>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-                  {error}
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  <strong>Error:</strong> {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                  <strong>Success:</strong> {success}
                 </div>
               )}
 
@@ -221,10 +256,10 @@ export default function Checkout() {
 
               <button
                 onClick={handlePlaceOrder}
-                disabled={loading || !selectedAddress}
-                className="w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer"
+                disabled={orderLoading || !selectedAddress}
+                className="w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition-all"
               >
-                {loading ? 'Processing...' : 'Place Order'}
+                {orderLoading ? 'Processing...' : 'Place Order'}
               </button>
 
               <Link
