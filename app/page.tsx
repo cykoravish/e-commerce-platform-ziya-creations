@@ -128,12 +128,12 @@ export default function Home() {
   const handleCategoryFilter = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setSelectedGender('');
-    fetchProducts(categoryId);
+    fetchProducts(categoryId, '');
   };
 
   const handleGenderFilter = (gender: string) => {
     setSelectedGender(gender);
-    fetchProducts(selectedCategory, gender);
+    fetchProducts(selectedCategory || undefined, gender);
   };
 
   const handleSearch = async (query: string) => {
