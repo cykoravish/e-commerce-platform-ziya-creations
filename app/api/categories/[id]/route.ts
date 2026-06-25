@@ -6,12 +6,13 @@ import { NextRequest } from 'next/server';
 // GET category by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectDB();
 
-    const category = await Category.findById(params.id);
+    const category = await Category.findById(id);
 
     if (!category) {
       return createErrorResponse('Category not found', 404, 'NOT_FOUND');
@@ -27,9 +28,10 @@ export async function GET(
 // PUT update category
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const auth = await verifyAuth(request);
 
     if (!auth || (auth.role !== 'admin' && auth.role !== 'super_admin')) {
@@ -46,7 +48,7 @@ export async function PUT(
     }
 
     const category = await Category.findByIdAndUpdate(
-      params.id,
+      id,
       {
         name,
         description: description || '',
@@ -69,9 +71,10 @@ export async function PUT(
 // DELETE category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const auth = await verifyAuth(request);
 
     if (!auth || (auth.role !== 'admin' && auth.role !== 'super_admin')) {
@@ -80,7 +83,7 @@ export async function DELETE(
 
     await connectDB();
 
-    const category = await Category.findByIdAndDelete(params.id);
+    const category = await Category.findByIdAndDelete(id);
 
     if (!category) {
       return createErrorResponse('Category not found', 404, 'NOT_FOUND');
