@@ -219,11 +219,11 @@ export default function Home() {
                     </div>
                     {user.role !== 'customer' && (
                       <span className="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full font-bold">
-                        {user.role === 'super_admin' ? 'ADMIN' : 'STAFF'}
+                        {user.role === 'super_admin' ? 'SUPER ADMIN' : 'ADMIN'}
                       </span>
                     )}
                   </button>
-                  <div className="absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition z-50">
+                  <div className="absolute right-0 mt-0 w-56 bg-white shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:mt-2 transition-all duration-200 z-50">
                     <div className="px-4 py-3 border-b border-gray-200">
                       <p className="font-semibold text-gray-900">{user.name}</p>
                       <p className="text-xs text-gray-600">{user.email}</p>
