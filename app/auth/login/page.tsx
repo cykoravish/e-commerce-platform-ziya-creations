@@ -91,7 +91,7 @@ export default function Login() {
           </p>
           <p className="text-center text-xs text-gray-600">
             Admin or staff?{' '}
-            <Link href="/admin/login" className="text-purple-600 hover:underline font-semibold">
+            <Link href="/admin-login" className="text-purple-600 hover:underline font-semibold">
               Admin Login
             </Link>
           </p>
