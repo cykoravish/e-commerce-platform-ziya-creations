@@ -3,13 +3,14 @@ import Order from '@/lib/models/Order';
 import { verifyAuth, createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await verifyAuth(request);
     if (!auth) {
       return createErrorResponse('Unauthorized', 401, 'UNAUTHORIZED');
     }
 
+    const resolvedParams = await params;
     const body = await request.json();
     const { status } = body;
 
@@ -20,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     await connectDB();
 
     const order = await Order.findByIdAndUpdate(
-      params.id,
+      resolvedParams.id,
       { status },
       { new: true }
     );
