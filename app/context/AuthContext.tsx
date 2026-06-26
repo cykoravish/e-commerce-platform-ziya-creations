@@ -15,6 +15,7 @@ interface AuthContextType {
   token: string | null;
   authToken: string | null;
   loading: boolean;
+  authLoading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
   isAdmin: boolean;
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         authToken: token,
         loading,
+        authLoading: loading,
         login,
         logout,
         isAdmin: user?.role === 'admin' || user?.role === 'super_admin',

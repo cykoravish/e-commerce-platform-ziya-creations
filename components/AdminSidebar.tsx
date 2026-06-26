@@ -20,6 +20,8 @@ export function AdminSidebar() {
     { icon: Image, label: 'Banners', href: '/admin/banners', roles: ['super_admin'] },
     { icon: MapPin, label: 'Stores', href: '/admin/stores', roles: ['super_admin'] },
     { icon: Users, label: 'Manage Admins', href: '/admin/manage-admins', roles: ['super_admin'] },
+    { icon: Tag, label: 'Manage Offers', href: '/admin/offers', roles: ['super_admin'] },
+    { icon: Users, label: 'Manage Reviews', href: '/admin/reviews', roles: ['super_admin'] },
     { icon: Settings, label: 'Settings', href: '/admin/settings', roles: ['super_admin', 'admin'] },
   ];
 
