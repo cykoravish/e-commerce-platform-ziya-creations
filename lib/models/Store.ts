@@ -7,6 +7,7 @@ export interface IStore extends mongoose.Document {
   address: string;
   phone: string;
   email: string;
+  image?: string;
   latitude: number;
   longitude: number;
   openingTime: string;
@@ -24,6 +25,7 @@ const storeSchema = new mongoose.Schema<IStore>(
     address: { type: String, required: true },
     phone: { type: String, required: true },
     email: { type: String, required: true },
+    image: { type: String },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
     openingTime: { type: String, default: '10:00' },

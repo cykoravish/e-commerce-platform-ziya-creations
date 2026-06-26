@@ -10,6 +10,10 @@ import {
   Users,
   Tag,
   Crown,
+  Gift,
+  Star,
+  Images,
+  MapPin,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -115,6 +119,38 @@ export default function AdminDashboard() {
                 description="Create discount codes and promotions"
                 color="bg-orange-50 border-orange-200"
               />
+              <ManagementCard
+                href="/admin/banners"
+                icon={<Images size={24} />}
+                title="Manage Banners"
+                description="Upload and manage website banners"
+                color="bg-pink-50 border-pink-200"
+              />
+              <ManagementCard
+                href="/admin/stores"
+                icon={<MapPin size={24} />}
+                title="Manage Stores"
+                description="Add and update store locations"
+                color="bg-teal-50 border-teal-200"
+              />
+              {isSuperAdmin && (
+                <>
+                  <ManagementCard
+                    href="/admin/offers"
+                    icon={<Gift size={24} />}
+                    title="Manage Offers"
+                    description="Create and manage promotional offers"
+                    color="bg-red-50 border-red-200"
+                  />
+                  <ManagementCard
+                    href="/admin/reviews"
+                    icon={<Star size={24} />}
+                    title="Manage Reviews"
+                    description="Approve, edit, and display customer reviews"
+                    color="bg-indigo-50 border-indigo-200"
+                  />
+                </>
+              )}
             </div>
           </div>
 

@@ -6,7 +6,11 @@ import { NextRequest } from 'next/server';
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const banners = await Banner.find({ isActive: true }).sort({ displayOrder: 1 });
+    const url = new URL(req.url);
+    const all = url.searchParams.get('all') === 'true';
+    
+    const query = all ? {} : { isActive: true };
+    const banners = await Banner.find(query).sort({ displayOrder: 1 });
     return createResponse(banners,'Banners fetched successfully', 200);
   } catch (error: any) {
     console.error('[v0] Get banners error:', error);

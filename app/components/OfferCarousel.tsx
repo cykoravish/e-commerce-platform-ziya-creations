@@ -4,12 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Offer } from '@/lib/models/Offer';
+import { useTouchScroll } from '@/app/hooks/useTouchScroll';
 
 interface OfferCarouselProps {
   offers: Offer[];
 }
 
 export default function OfferCarousel({ offers }: OfferCarouselProps) {
+  const touchScrollRef = useTouchScroll();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -86,24 +88,25 @@ export default function OfferCarousel({ offers }: OfferCarouselProps) {
 
         {/* Carousel Container */}
         <div className="relative">
-          {/* Offers Grid */}
-          <div className="overflow-hidden">
-            <div
-              className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out"
-              style={{
-                transform: `translateX(${-currentIndex * (100 / visibleCount)}%)`,
-              }}
-            >
-              {offers.map((offer) => (
-                <div
-                  key={offer.id}
-                  className="flex-shrink-0"
-                  style={{ width: `calc(${100 / visibleCount}% - ${((visibleCount - 1) * 1) / visibleCount}rem)` }}
-                >
-                  <OfferCard offer={offer} />
-                </div>
-              ))}
-            </div>
+          <div
+            ref={touchScrollRef}
+            className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing"
+            style={{
+              transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
+              overflowX: 'auto',
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {offers.map((offer) => (
+              <div
+                key={offer.id}
+                className="flex-shrink-0"
+                style={{ width: `calc(${100 / visibleCount}% - ${((visibleCount - 1) * 1) / visibleCount}rem)` }}
+              >
+                <OfferCard offer={offer} />
+              </div>
+            ))}
           </div>
 
           {/* Navigation Buttons */}
@@ -126,25 +129,25 @@ export default function OfferCarousel({ offers }: OfferCarouselProps) {
               </button>
             </>
           )}
-
-          {/* Dots Navigation */}
-          {offers.length > visibleCount && (
-            <div className="mt-6 flex justify-center gap-2">
-              {Array.from({ length: totalDots }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleDotClick(idx)}
-                  className={`transition-all rounded-full ${
-                    currentIndex === idx
-                      ? 'bg-blue-600 w-3 h-3'
-                      : 'bg-slate-300 w-2 h-2 hover:bg-slate-400'
-                  }`}
-                  aria-label={`Go to offer set ${idx + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* Dots Navigation */}
+        {offers.length > visibleCount && (
+          <div className="mt-6 flex justify-center gap-2">
+            {Array.from({ length: totalDots }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleDotClick(idx)}
+                className={`transition-all rounded-full ${
+                  currentIndex === idx
+                    ? 'bg-blue-600 w-3 h-3'
+                    : 'bg-slate-300 w-2 h-2 hover:bg-slate-400'
+                }`}
+                aria-label={`Go to offer set ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
