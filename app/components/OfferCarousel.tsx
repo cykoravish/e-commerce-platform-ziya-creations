@@ -4,12 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Offer } from '@/lib/models/Offer';
+import { useTouchScroll } from '@/app/hooks/useTouchScroll';
 
 interface OfferCarouselProps {
   offers: Offer[];
 }
 
 export default function OfferCarousel({ offers }: OfferCarouselProps) {
+  const touchScrollRef = useTouchScroll();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -85,15 +87,16 @@ export default function OfferCarousel({ offers }: OfferCarouselProps) {
         </div>
 
         {/* Carousel Container */}
-        <div className="relative">
-          {/* Offers Grid */}
-          <div className="overflow-hidden">
-            <div
-              className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out"
-              style={{
-                transform: `translateX(${-currentIndex * (100 / visibleCount)}%)`,
-              }}
-            >
+        <div
+          ref={touchScrollRef}
+          className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing"
+          style={{
+            transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
+            overflowX: 'auto',
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
               {offers.map((offer) => (
                 <div
                   key={offer.id}

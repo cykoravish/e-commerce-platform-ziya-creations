@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
+import axios from 'axios';
 
 interface Address {
   _id: string;
@@ -291,8 +292,7 @@ export default function Checkout() {
     setOrderLoading(true);
 
     try {
-      console.log('[v0] Placing order with address:', selectedAddress);
-      // Create order
+      // Create order in backend
       const orderResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/orders/create`,
         {
@@ -312,7 +312,6 @@ export default function Checkout() {
       );
 
       const orderData = await orderResponse.json();
-      console.log('[v0] Order response:', orderData);
 
       if (!orderResponse.ok) {
         setError(orderData.message || 'Failed to place order');
@@ -321,20 +320,80 @@ export default function Checkout() {
       }
 
       if (orderData.statusCode === 'CREATED' && orderData.data) {
-        setSuccess('Order placed successfully!');
-        // Clear cart and redirect to order page
-        setTimeout(() => {
-          clearCart();
-          const orderId = orderData.data.order?.orderId || orderData.data.orderId;
-          router.push(`/orders/${orderId}`);
-        }, 1500);
+        const orderId = orderData.data.order?.orderId || orderData.data.orderId;
+        const totalAmount = Math.round((total * 1.18) * 100); // Razorpay expects amount in paise
+
+        // Create Razorpay order
+        try {
+          const rzpOrderResponse = await axios.post('/api/payment/create-order', {
+            amount: totalAmount,
+            orderId: orderId,
+            userEmail: user.email,
+            userName: user.name,
+          });
+
+          const razorpayOrder = rzpOrderResponse.data.data;
+
+          // Open Razorpay checkout
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => {
+            const options = {
+              key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+              amount: totalAmount,
+              currency: 'INR',
+              name: 'Ziya Creations',
+              description: `Order #${orderId}`,
+              order_id: razorpayOrder.id,
+              handler: async (response: any) => {
+                try {
+                  // Verify payment
+                  const verifyResponse = await axios.post('/api/payment/verify', {
+                    orderId: orderId,
+                    razorpayOrderId: razorpayOrder.id,
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpaySignature: response.razorpay_signature,
+                  });
+
+                  if (verifyResponse.data.statusCode === 'SUCCESS') {
+                    setSuccess('Payment successful! Order confirmed.');
+                    setTimeout(() => {
+                      clearCart();
+                      router.push(`/orders/${orderId}`);
+                    }, 1500);
+                  } else {
+                    setError('Payment verification failed. Please contact support.');
+                  }
+                } catch (err: any) {
+                  setError(err.response?.data?.message || 'Payment verification failed');
+                }
+                setOrderLoading(false);
+              },
+              prefill: {
+                name: user.name,
+                email: user.email,
+                contact: user.phone || '',
+              },
+              theme: {
+                color: '#0066cc',
+              },
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+          };
+          document.body.appendChild(script);
+        } catch (err: any) {
+          setError(err.response?.data?.message || 'Failed to create payment order');
+          setOrderLoading(false);
+        }
       } else {
         setError(orderData.message || 'Failed to place order');
         setOrderLoading(false);
       }
-    } catch (err) {
-      console.error('[v0] Place order error:', err);
-      setError('An error occurred. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again.');
       setOrderLoading(false);
     }
   };

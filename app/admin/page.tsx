@@ -10,6 +10,7 @@ import {
   Users,
   Tag,
   Crown,
+  Gift,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -115,6 +116,15 @@ export default function AdminDashboard() {
                 description="Create discount codes and promotions"
                 color="bg-orange-50 border-orange-200"
               />
+              {isSuperAdmin && (
+                <ManagementCard
+                  href="/admin/offers"
+                  icon={<Gift size={24} />}
+                  title="Manage Offers"
+                  description="Create and manage promotional offers"
+                  color="bg-red-50 border-red-200"
+                />
+              )}
             </div>
           </div>
 

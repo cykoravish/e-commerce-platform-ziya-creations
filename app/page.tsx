@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCart } from "./context/CartContext";
 import { useAuth } from "./context/AuthContext";
 import OfferCarousel from "./components/OfferCarousel";
+import { useTouchScroll } from "./hooks/useTouchScroll";
 import {
   ShoppingCart,
   User,
@@ -54,6 +55,7 @@ interface Banner {
 export default function HomePage() {
   const searchParams = useSearchParams();
   const productsRef = useRef<HTMLElement>(null);
+  const bestSellersScrollRef = useTouchScroll();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -773,9 +775,13 @@ export default function HomePage() {
 
                 <div className="overflow-hidden rounded-xl">
                   <div
-                    className="flex transition-transform duration-500 ease-in-out"
+                    ref={bestSellersScrollRef}
+                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing"
                     style={{
                       transform: `translateX(-${bestSellerIndex * 100}%)`,
+                      overflowX: 'auto',
+                      scrollBehavior: 'smooth',
+                      WebkitOverflowScrolling: 'touch',
                     }}
                   >
                     {bestSellers.map((product) => (
