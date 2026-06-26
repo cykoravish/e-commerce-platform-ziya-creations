@@ -339,6 +339,8 @@ export default function Checkout() {
           script.src = 'https://checkout.razorpay.com/v1/checkout.js';
           script.async = true;
           script.onload = () => {
+            let paymentHandled = false;
+
             const options = {
               key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
               amount: totalAmount,
@@ -347,6 +349,7 @@ export default function Checkout() {
               description: `Order #${orderId}`,
               order_id: razorpayOrder.id,
               handler: async (response: any) => {
+                paymentHandled = true;
                 try {
                   // Verify payment
                   const verifyResponse = await axios.post('/api/payment/verify', {
@@ -369,6 +372,14 @@ export default function Checkout() {
                   setError(err.response?.data?.message || 'Payment verification failed');
                 }
                 setOrderLoading(false);
+              },
+              modal: {
+                ondismiss: () => {
+                  if (!paymentHandled) {
+                    setOrderLoading(false);
+                    setError('Payment cancelled. Please try again if you wish to proceed.');
+                  }
+                },
               },
               prefill: {
                 name: user.name,
