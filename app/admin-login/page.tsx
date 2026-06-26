@@ -16,7 +16,7 @@ export default function AdminLogin() {
   // Redirect if already logged in as admin
   useEffect(() => {
     if (user && (user.role === 'admin' || user.role === 'super_admin')) {
-      router.push('/admin/dashboard');
+      router.push('/admin');
     }
   }, [user, router]);
 
@@ -38,7 +38,7 @@ export default function AdminLogin() {
         // Verify user is admin/superadmin before storing
         if (data.data.user.role === 'admin' || data.data.user.role === 'super_admin') {
           login(data.data.token, data.data.user);
-          router.push('/admin/dashboard');
+          router.push('/admin');
         } else {
           setError('Unauthorized access. Admin role required.');
         }
