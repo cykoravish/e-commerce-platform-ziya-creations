@@ -41,6 +41,15 @@ export async function PUT(
 
     await connectDB();
 
+    // If name is being updated, regenerate slug
+    if (body.name) {
+      body.slug = body.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]/g, '')
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+    }
+
     const product = await Product.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,

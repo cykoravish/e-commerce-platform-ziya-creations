@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
     const slug = name
       .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[^\w-]/g, '');
+      .replace(/[^\w-]/g, '')
+      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 
     // Create product
     const product = new Product({
