@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "./context/CartContext";
 import { useAuth } from "./context/AuthContext";
@@ -51,6 +52,9 @@ interface Banner {
 }
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
+  const productsRef = useRef<HTMLElement>(null);
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
@@ -197,6 +201,17 @@ export default function HomePage() {
       console.error("Failed to fetch offers:", e);
     }
   };
+
+  // Handle offer click - scroll to products section
+  useEffect(() => {
+    const offerClicked = searchParams.get('offerClicked');
+    if (offerClicked && productsRef.current) {
+      // Small delay to ensure page is fully rendered
+      setTimeout(() => {
+        productsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [searchParams]);
 
   const handleCategoryFilter = (categoryId: string) => {
     const next = categoryId === selectedCategory ? "" : categoryId;
@@ -673,7 +688,7 @@ export default function HomePage() {
       {offers.length > 0 && <OfferCarousel offers={offers} />}
 
       {/* ── Main Content ── */}
-      <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
+      <section ref={productsRef} className="max-w-7xl mx-auto px-4 py-6 md:py-10">
         {loading ? (
           <SkeletonLoader />
         ) : (
@@ -840,7 +855,7 @@ export default function HomePage() {
             </section>
           </>
         )}
-      </div>
+      </section>
 
       {/* ── Footer ── */}
       <footer className="bg-gray-900 text-white mt-12 pt-10 pb-6">

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Offer } from '@/lib/models/Offer';
 
@@ -150,6 +151,7 @@ export default function OfferCarousel({ offers }: OfferCarouselProps) {
 }
 
 function OfferCard({ offer }: { offer: Offer }) {
+  const router = useRouter();
   const [timeLeft, setTimeLeft] = useState<string>('');
 
   useEffect(() => {
@@ -185,6 +187,13 @@ function OfferCard({ offer }: { offer: Offer }) {
 
     return () => clearInterval(interval);
   }, [offer.expiryDate]);
+
+  const handleShopNow = () => {
+    // Navigate to home page with offer context
+    // In a real scenario, you could filter products based on offer category
+    // For now, we'll navigate to home and show a notification
+    router.push('/?offerClicked=' + offer.id);
+  };
 
   const badgeColorMap: Record<string, string> = {
     primary: 'bg-blue-600 text-white',
@@ -266,7 +275,10 @@ function OfferCard({ offer }: { offer: Offer }) {
         </div>
 
         {/* CTA Button */}
-        <button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2 sm:py-2.5 rounded-lg transition-all duration-300 text-xs sm:text-sm transform group-hover:scale-105">
+        <button
+          onClick={handleShopNow}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2 sm:py-2.5 rounded-lg transition-all duration-300 text-xs sm:text-sm transform group-hover:scale-105 cursor-pointer"
+        >
           Shop Now
         </button>
       </div>
