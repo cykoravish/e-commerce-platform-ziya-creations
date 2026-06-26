@@ -1,0 +1,58 @@
+[
+  {
+    "id": "1",
+    "title": "🔥 Summer Collection - 30% Off",
+    "description": "Get ready for summer with our exclusive 30% discount on all summer wear",
+    "discount": 30,
+    "discountType": "percentage",
+    "badge": "SUMMER SALE",
+    "badgeColor": "primary",
+    "isActive": true,
+    "order": 0,
+    "expiryDate": "2026-07-03T01:15:34.596Z",
+    "createdAt": "2026-06-26T01:15:34.596Z",
+    "updatedAt": "2026-06-26T01:15:34.596Z"
+  },
+  {
+    "id": "2",
+    "title": "⚡ Flash Deal - 20% Off",
+    "description": "Limited time offer: Up to 20% extra discount on selected items",
+    "discount": 20,
+    "discountType": "percentage",
+    "badge": "FLASH SALE",
+    "badgeColor": "danger",
+    "isActive": true,
+    "order": 1,
+    "expiryDate": "2026-06-29T01:15:34.596Z",
+    "createdAt": "2026-06-26T01:15:34.596Z",
+    "updatedAt": "2026-06-26T01:15:34.596Z"
+  },
+  {
+    "id": "3",
+    "title": "💰 Buy More, Save More",
+    "description": "Save $50 on purchases over $200. Valid on selected categories",
+    "discount": 50,
+    "discountType": "fixed",
+    "badge": "HOT DEAL",
+    "badgeColor": "secondary",
+    "isActive": true,
+    "order": 2,
+    "expiryDate": "2026-07-01T01:15:34.596Z",
+    "createdAt": "2026-06-26T01:15:34.596Z",
+    "updatedAt": "2026-06-26T01:15:34.596Z"
+  },
+  {
+    "id": "4",
+    "title": "🎉 Weekend Special",
+    "description": "Enjoy 25% discount on all categories this weekend only!",
+    "discount": 25,
+    "discountType": "percentage",
+    "badge": "WEEKEND ONLY",
+    "badgeColor": "success",
+    "isActive": true,
+    "order": 3,
+    "expiryDate": "2026-06-28T01:15:34.596Z",
+    "createdAt": "2026-06-26T01:15:34.596Z",
+    "updatedAt": "2026-06-26T01:15:34.596Z"
+  }
+]

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useCart } from "./context/CartContext";
 import { useAuth } from "./context/AuthContext";
+import OfferCarousel from "./components/OfferCarousel";
 import {
   ShoppingCart,
   User,
@@ -54,6 +55,7 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedGender, setSelectedGender] = useState<string>("");
@@ -114,6 +116,7 @@ export default function HomePage() {
         fetchProducts(),
         fetchBestSellers(),
         fetchBanners(),
+        fetchOffers(),
       ]);
     } finally {
       setLoading(false);
@@ -180,6 +183,18 @@ export default function HomePage() {
       if (data.statusCode === "SUCCESS") setBanners(data.data || []);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const fetchOffers = async () => {
+    try {
+      const res = await fetch("/api/offers?active=true");
+      const data = await res.json();
+      if (data.statusCode === "SUCCESS") {
+        setOffers(data.data || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch offers:", e);
     }
   };
 
@@ -653,6 +668,9 @@ export default function HomePage() {
           )}
         </div>
       )}
+
+      {/* ── Offer Carousel ── */}
+      {offers.length > 0 && <OfferCarousel offers={offers} />}
 
       {/* ── Main Content ── */}
       <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
