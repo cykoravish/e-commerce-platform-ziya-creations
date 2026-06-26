@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCart } from "./context/CartContext";
 import { useAuth } from "./context/AuthContext";
 import OfferCarousel from "./components/OfferCarousel";
+import ReviewsSection from "./components/ReviewsSection";
 import { useTouchScroll } from "./hooks/useTouchScroll";
 import {
   ShoppingCart,
@@ -862,6 +863,9 @@ export default function HomePage() {
           </>
         )}
       </section>
+
+      {/* ── Reviews Section ── */}
+      <ReviewsSection />
 
       {/* ── Footer ── */}
       <footer className="bg-gray-900 text-white mt-12 pt-10 pb-6">

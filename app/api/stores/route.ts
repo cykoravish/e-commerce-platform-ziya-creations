@@ -6,7 +6,11 @@ import { NextRequest } from 'next/server';
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const stores = await Store.find({ isActive: true }).sort({ city: 1 });
+    const url = new URL(req.url);
+    const all = url.searchParams.get('all') === 'true';
+    
+    const query = all ? {} : { isActive: true };
+    const stores = await Store.find(query).sort({ city: 1 });
     return createResponse(stores, 'Stores fetched successfully', 200);
   } catch (error: any) {
     console.error('[v0] Get stores error:', error);
