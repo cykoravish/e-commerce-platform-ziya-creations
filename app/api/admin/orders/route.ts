@@ -12,7 +12,21 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const orders = await Order.find({})
+    // Build query based on admin role
+    const query: any = {};
+    
+    // Super admin sees all orders, regular admin sees only their product's orders
+    if (auth.role !== 'super_admin') {
+      // Find all products created by this admin
+      const Product = require('@/lib/models/Product').default;
+      const adminProducts = await Product.find({ createdBy: auth.userId }).select('_id');
+      const productIds = adminProducts.map((p: any) => p._id);
+      
+      // Find orders containing these products
+      query['items.product'] = { $in: productIds };
+    }
+
+    const orders = await Order.find(query)
       .populate('user', 'name email phone')
       .populate('items.product', 'name price images')
       .sort('-createdAt')

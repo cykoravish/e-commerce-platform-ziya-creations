@@ -36,6 +36,12 @@ export async function GET(request: NextRequest) {
         { description: { $regex: search, $options: 'i' } },
       ];
     }
+
+    // Filter by admin who created the product
+    const createdBy = searchParams.get('createdBy');
+    if (createdBy) {
+      query.createdBy = createdBy;
+    }
     console.log('Before populate:', mongoose.modelNames());
     const products = await Product.find(query)
       .populate('category', 'name slug')

@@ -777,12 +777,14 @@ export default function HomePage() {
                 <div className="overflow-hidden rounded-xl">
                   <div
                     ref={bestSellersScrollRef}
-                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing"
+                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing scroll-smooth"
                     style={{
                       transform: `translateX(-${bestSellerIndex * 100}%)`,
                       overflowX: 'auto',
                       scrollBehavior: 'smooth',
                       WebkitOverflowScrolling: 'touch',
+                      WebkitScrollSnap: 'type: x mandatory',
+                      scrollSnapType: 'x mandatory',
                     }}
                   >
                     {bestSellers.map((product) => (
