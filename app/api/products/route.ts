@@ -39,10 +39,14 @@ export async function GET(request: NextRequest) {
 
     // Filter by admin who created the product
     const createdBy = searchParams.get('createdBy');
-    if (createdBy) {
-      query.createdBy = createdBy;
+    if (createdBy && createdBy !== 'undefined' && createdBy.trim()) {
+      try {
+        query.createdBy = createdBy;
+      } catch (err) {
+        console.error('[v0] Invalid createdBy parameter:', createdBy);
+      }
     }
-    console.log('Before populate:', mongoose.modelNames());
+    
     const products = await Product.find(query)
       .populate('category', 'name slug')
       .sort(sort)

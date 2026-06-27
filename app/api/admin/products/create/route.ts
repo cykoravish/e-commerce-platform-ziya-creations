@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       sku,
       images: images || [],
       isActive: true,
-      createdBy: auth.id,
+      createdBy: auth.userId,
     });
 
     await product.save();
