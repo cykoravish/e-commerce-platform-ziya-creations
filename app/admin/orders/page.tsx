@@ -24,7 +24,7 @@ interface Order {
 }
 
 export default function AdminOrders() {
-  const { user, loading, isAdmin, authToken } = useAuth();
+  const { user, loading, isAdmin, authToken, isSuperAdmin } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
@@ -49,7 +49,13 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     try {
       setPageLoading(true);
-      const response = await axios.get('/api/admin/orders', {
+      // Pass adminId for non-super-admin users
+      let url = '/api/admin/orders';
+      if (!isSuperAdmin && user?.id) {
+        url = `/api/admin/orders?adminId=${user.id}`;
+      }
+      
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 

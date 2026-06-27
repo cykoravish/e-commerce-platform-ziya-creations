@@ -29,10 +29,10 @@ export default function AdminProducts() {
   }, [user, loading, isAdmin, router]);
 
   useEffect(() => {
-    if (!loading && user && isAdmin && authToken && user._id) {
+    if (!loading && user && isAdmin && authToken && user.id) {
       fetchProducts();
     }
-  }, [user, isAdmin, authToken, loading, user?._id]);
+  }, [user, isAdmin, authToken, loading, user?.id]);
 
   const fetchProducts = async () => {
     try {
@@ -41,11 +41,9 @@ export default function AdminProducts() {
       
       // Super admin sees all products, regular admin sees only their own
       let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=100`;
-      if (!isSuperAdmin && user?._id) {
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?createdBy=${user._id}`;
+      if (!isSuperAdmin && user?.id) {
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?createdBy=${user.id}`;
       }
-      
-      console.log('[v0] Fetching products from:', url);
       
       const response = await fetch(url, {
         headers: {
@@ -58,7 +56,6 @@ export default function AdminProducts() {
       }
       
       const data = await response.json();
-      console.log('[v0] Fetch response:', data);
       
       if (data.statusCode === 'SUCCESS') {
         setProducts(data.data.products || data.data || []);
