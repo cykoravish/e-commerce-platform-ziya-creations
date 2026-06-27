@@ -8,13 +8,7 @@ import { useAuth } from "./context/AuthContext";
 import OfferCarousel from "./components/OfferCarousel";
 import ReviewsSection from "./components/ReviewsSection";
 import { useTouchScroll } from "./hooks/useTouchScroll";
-import {
-  X,
-  Heart,
-  ChevronRight,
-  Star,
-  ChevronLeft,
-} from "lucide-react";
+import { X, Heart, ChevronRight, Star, ChevronLeft } from "lucide-react";
 
 interface Category {
   _id: string;
@@ -253,8 +247,7 @@ export default function HomePage() {
 
   return (
     // pb-16 on mobile gives space for the bottom nav bar
-   <div className="min-h-screen bg-gray-50">
-
+    <div className="min-h-screen bg-gray-50">
       {/* ── Banner Carousel ── */}
       {banners.length > 0 && (
         <div className="relative h-52 sm:h-64 md:h-80 bg-gray-200 overflow-hidden">
@@ -318,6 +311,7 @@ export default function HomePage() {
         ) : (
           <>
             {/* Best Sellers */}
+            {/* Best Sellers */}
             {bestSellers.length > 0 && (
               <section className="mb-10">
                 <div className="flex items-center justify-between mb-4">
@@ -327,10 +321,7 @@ export default function HomePage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
-                        setBestSellerIndex(
-                          (p) =>
-                            (p - 1 + bestSellers.length) % bestSellers.length,
-                        )
+                        setBestSellerIndex((p) => Math.max(0, p - 1))
                       }
                       className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition shadow-sm"
                       aria-label="Previous"
@@ -339,7 +330,9 @@ export default function HomePage() {
                     </button>
                     <button
                       onClick={() =>
-                        setBestSellerIndex((p) => (p + 1) % bestSellers.length)
+                        setBestSellerIndex((p) =>
+                          Math.min(bestSellers.length - 1, p + 1),
+                        )
                       }
                       className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition shadow-sm"
                       aria-label="Next"
@@ -351,10 +344,55 @@ export default function HomePage() {
 
                 <div className="overflow-hidden rounded-xl">
                   <div
-                    ref={bestSellersScrollRef}
-                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing scroll-smooth"
+                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing select-none"
                     style={{
                       transform: `translateX(-${bestSellerIndex * 100}%)`,
+                    }}
+                    onMouseDown={(e) => {
+                      const startX = e.clientX;
+                      const onMove = (ev: MouseEvent) => {
+                        const diff = startX - ev.clientX;
+                        if (Math.abs(diff) > 50) {
+                          diff > 0
+                            ? setBestSellerIndex((p) =>
+                                Math.min(bestSellers.length - 1, p + 1),
+                              )
+                            : setBestSellerIndex((p) => Math.max(0, p - 1));
+                          document.removeEventListener("mousemove", onMove);
+                          document.removeEventListener("mouseup", onUp);
+                        }
+                      };
+                      const onUp = () => {
+                        document.removeEventListener("mousemove", onMove);
+                        document.removeEventListener("mouseup", onUp);
+                      };
+                      document.addEventListener("mousemove", onMove);
+                      document.addEventListener("mouseup", onUp);
+                    }}
+                    onTouchStart={(e) => {
+                      const startX = e.touches[0].clientX;
+                      const onMove = (ev: TouchEvent) => {
+                        const diff = startX - ev.touches[0].clientX;
+                        if (Math.abs(diff) > 50) {
+                          diff > 0
+                            ? setBestSellerIndex((p) =>
+                                Math.min(bestSellers.length - 1, p + 1),
+                              )
+                            : setBestSellerIndex((p) => Math.max(0, p - 1));
+                          document.removeEventListener("touchmove", onMove);
+                          document.removeEventListener("touchend", onEnd);
+                        }
+                      };
+                      const onEnd = () => {
+                        document.removeEventListener("touchmove", onMove);
+                        document.removeEventListener("touchend", onEnd);
+                      };
+                      document.addEventListener("touchmove", onMove, {
+                        passive: true,
+                      });
+                      document.addEventListener("touchend", onEnd, {
+                        passive: true,
+                      });
                     }}
                   >
                     {bestSellers.map((product) => (
@@ -369,7 +407,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Dots for best sellers */}
                 <div className="flex justify-center gap-1.5 mt-3">
                   {bestSellers.map((_, i) => (
                     <button
