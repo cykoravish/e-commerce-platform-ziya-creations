@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trash2, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { Trash2, ArrowLeft, ShoppingCart, Heart, Phone, Mail } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 
 interface CartItem {
@@ -38,8 +38,30 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ── Navbar ── */}
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-primary to-secondary shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <Link href="/" className="text-xl md:text-2xl font-bold text-white tracking-tight">
+              Ziya
+            </Link>
+            <div className="flex-1" />
+            <div className="flex items-center gap-4">
+              <Link href="/wishlist" className="text-white hover:text-secondary transition">
+                <Heart size={22} />
+              </Link>
+              <Link href="/cart" className="text-white hover:text-secondary transition font-bold">
+                <ShoppingCart size={22} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Main Content ── */}
+      <div className="flex-1">
+        <div className="max-w-6xl mx-auto px-4 py-8">
         <Link href="/" className="inline-flex items-center gap-2 text-primary hover:text-secondary mb-6">
           <ArrowLeft size={20} />
           Continue Shopping
@@ -156,7 +178,45 @@ export default function CartPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
+
+      {/* ── Footer ── */}
+      <footer className="bg-gray-900 text-white py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-xl font-bold mb-4">Ziya Creations</h3>
+              <p className="text-gray-400 text-sm">Premium lifestyle products</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="/" className="hover:text-white">Home</Link></li>
+                <li><Link href="/orders" className="hover:text-white">Orders</Link></li>
+                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="/track-order" className="hover:text-white">Track Order</Link></li>
+                <li><Link href="/stores" className="hover:text-white">Stores</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <div className="space-y-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2"><Phone size={16} /> 1234567890</div>
+                <div className="flex items-center gap-2"><Mail size={16} /> info@ziyacreations.com</div>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-gray-700 pt-4 text-center text-sm text-gray-400">
+            <p>&copy; 2024 Ziya Creations. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
