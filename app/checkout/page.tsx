@@ -208,6 +208,10 @@ export default function Checkout() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
+  const [taxEnabled, setTaxEnabled] = useState(true);
+  const [taxPercentage, setTaxPercentage] = useState(18);
+  const [codAdvance, setCodAdvance] = useState(500);
 
   useEffect(() => {
     if (!user || !authToken) {
@@ -219,7 +223,22 @@ export default function Checkout() {
       return;
     }
     fetchAddresses();
+    fetchSettings();
   }, [user, items, router, authToken]);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings');
+      const data = await response.json();
+      if (data.statusCode === 'SUCCESS') {
+        setTaxEnabled(data.data.taxEnabled);
+        setTaxPercentage(data.data.taxPercentage);
+        setCodAdvance(data.data.codAdvanceAmount);
+      }
+    } catch (error) {
+      console.error('[v0] Fetch settings error:', error);
+    }
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -321,7 +340,86 @@ export default function Checkout() {
 
       if (orderData.statusCode === 'CREATED' && orderData.data) {
         const orderId = orderData.data.order?.orderId || orderData.data.orderId;
-        const totalAmount = Math.round((total * 1.18) * 100); // Razorpay expects amount in paise
+        const taxAmount = taxEnabled ? (total * (taxPercentage / 100)) : 0;
+        const finalTotal = total + taxAmount;
+
+        if (paymentMethod === 'cod') {
+          // Cash on Delivery - charge advance
+          const advanceAmount = Math.round(codAdvance * 100); // Convert to paise
+          try {
+            const rzpOrderResponse = await axios.post('/api/payment/create-order', {
+              amount: advanceAmount,
+              orderId: orderId,
+              userEmail: user.email,
+              userName: user.name,
+            });
+
+            const razorpayOrder = rzpOrderResponse.data.data;
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.async = true;
+            script.onload = () => {
+              const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount: advanceAmount,
+                currency: 'INR',
+                name: 'Ziya Creations',
+                description: `Order #${orderId} - COD Advance (₹${codAdvance})`,
+                order_id: razorpayOrder.id,
+                handler: async (response: any) => {
+                  try {
+                    const verifyResponse = await axios.post('/api/orders/verify-payment', {
+                      orderId: orderId,
+                      razorpayOrderId: razorpayOrder.id,
+                      razorpayPaymentId: response.razorpay_payment_id,
+                      razorpaySignature: response.razorpay_signature,
+                      paymentMethod: 'cod',
+                    });
+
+                    if (verifyResponse.data.statusCode === 'SUCCESS') {
+                      setSuccess('Advance payment successful! Order confirmed.');
+                      setTimeout(() => {
+                        clearCart();
+                        router.push(`/orders/${orderId}`);
+                      }, 1500);
+                    } else {
+                      setError('Payment verification failed. Please contact support.');
+                    }
+                  } catch (err: any) {
+                    setError(err.response?.data?.message || 'Payment verification failed');
+                  }
+                  setOrderLoading(false);
+                },
+                modal: {
+                  ondismiss: () => {
+                    setOrderLoading(false);
+                    setError('Payment cancelled. Please try again if you wish to proceed.');
+                  },
+                },
+                prefill: {
+                  name: user.name,
+                  email: user.email,
+                  contact: user.phone || '',
+                },
+                theme: {
+                  color: '#0066cc',
+                },
+              };
+
+              const rzp = new (window as any).Razorpay(options);
+              rzp.open();
+            };
+            document.body.appendChild(script);
+            return;
+          } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to create advance payment');
+            setOrderLoading(false);
+            return;
+          }
+        }
+
+        // Razorpay full payment
+        const totalAmount = Math.round((finalTotal) * 100); // Razorpay expects amount in paise
 
         // Create Razorpay order
         try {
