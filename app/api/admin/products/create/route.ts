@@ -35,11 +35,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create slug
-    const slug = name
+    let slug = name
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^\w-]/g, '')
       .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+    // Check if slug already exists and append number if needed
+    let originalSlug = slug;
+    let counter = 1;
+    let slugExists = await Product.findOne({ slug });
+    
+    while (slugExists) {
+      slug = `${originalSlug}-${counter}`;
+      slugExists = await Product.findOne({ slug });
+      counter++;
+    }
 
     // Create product
     const product = new Product({

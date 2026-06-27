@@ -43,11 +43,24 @@ export async function PUT(
 
     // If name is being updated, regenerate slug
     if (body.name) {
-      body.slug = body.name
+      let slug = body.name
         .toLowerCase()
         .replace(/\s+/g, '-')
         .replace(/[^\w-]/g, '')
         .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+      // Check if slug already exists (excluding current product)
+      let originalSlug = slug;
+      let counter = 1;
+      let slugExists = await Product.findOne({ slug, _id: { $ne: id } });
+      
+      while (slugExists) {
+        slug = `${originalSlug}-${counter}`;
+        slugExists = await Product.findOne({ slug, _id: { $ne: id } });
+        counter++;
+      }
+      
+      body.slug = slug;
     }
 
     const product = await Product.findByIdAndUpdate(id, body, {
