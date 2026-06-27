@@ -20,6 +20,7 @@ export default function AdminProducts() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -28,31 +29,48 @@ export default function AdminProducts() {
   }, [user, loading, isAdmin, router]);
 
   useEffect(() => {
-    if (user && isAdmin && authToken && user._id) {
+    if (!loading && user && isAdmin && authToken && user._id) {
       fetchProducts();
     }
-  }, [user, isAdmin, authToken]);
+  }, [user, isAdmin, authToken, loading, user?._id]);
 
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
+      setError(null);
+      
       // Super admin sees all products, regular admin sees only their own
       let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=100`;
       if (!isSuperAdmin && user?._id) {
         url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?createdBy=${user._id}`;
       }
       
+      console.log('[v0] Fetching products from:', url);
+      
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
       });
-      const data = await response.json();
-      if (data.statusCode === 'SUCCESS') {
-        setProducts(data.data.products || data.data);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
-    } catch (error) {
+      
+      const data = await response.json();
+      console.log('[v0] Fetch response:', data);
+      
+      if (data.statusCode === 'SUCCESS') {
+        setProducts(data.data.products || data.data || []);
+        setError(null);
+      } else {
+        setError(data.message || 'Failed to fetch products');
+        setProducts([]);
+      }
+    } catch (error: any) {
       console.error('[v0] Fetch products error:', error);
+      setError(error.message || 'Failed to fetch products');
+      setProducts([]);
     } finally {
       setLoadingProducts(false);
     }
@@ -117,6 +135,12 @@ export default function AdminProducts() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+        
         <div className="bg-white rounded-xl shadow overflow-hidden">
           {products.length === 0 ? (
             <div className="p-12 text-center">
