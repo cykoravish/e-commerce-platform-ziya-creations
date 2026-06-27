@@ -186,26 +186,44 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Reviews */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
+        {/* Reviews Section */}
+        <div className="mt-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-lg p-8 md:p-10">
+          <div className="mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Customer Reviews</h2>
+            <p className="text-gray-600">Real feedback from verified buyers</p>
+          </div>
+          
           {reviews.length === 0 ? (
-            <p className="text-gray-500">No reviews yet</p>
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg mb-4">No reviews yet. Be the first to share your thoughts!</p>
+              <p className="text-sm text-gray-500">After purchasing, you can leave a review to help other customers.</p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {reviews.map((review) => (
-                <div key={review._id} className="border-b pb-4">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={review._id} className="bg-white rounded-lg p-6 border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                     <div>
-                      <p className="font-semibold">{review.user.name}</p>
-                      <div className="text-yellow-500">★ {review.rating}</div>
+                      <p className="font-semibold text-gray-900 text-lg">{review.user?.name || 'Anonymous'}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} className={`text-lg ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>
+                            ★
+                          </span>
+                        ))}
+                        <span className="ml-2 text-sm font-semibold text-gray-700">({review.rating}/5)</span>
+                      </div>
                     </div>
                     <span className="text-sm text-gray-500">
-                      {new Date(review.createdAt).toLocaleDateString()}
+                      {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
                     </span>
                   </div>
-                  <h3 className="font-semibold mb-1">{review.title}</h3>
-                  <p className="text-gray-700">{review.comment}</p>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">{review.title}</h3>
+                  <p className="text-gray-700 leading-relaxed">{review.comment}</p>
                 </div>
               ))}
             </div>
