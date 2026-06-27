@@ -22,6 +22,20 @@ export async function GET(request: NextRequest) {
       query.orderId = orderId;
     }
 
+    // If regular user/admin, only show orders containing their uploaded products
+    if (auth.role !== 'super_admin') {
+      const Product = require('@/lib/models/Product').default;
+      const userProducts = await Product.find({ createdBy: auth.userId }).select('_id');
+      const productIds = userProducts.map((p: any) => p._id);
+      
+      if (productIds.length > 0) {
+        query['items.product'] = { $in: productIds };
+      } else {
+        // User has no products, return empty array
+        return createResponse([], 'Orders fetched successfully', 200, 'SUCCESS');
+      }
+    }
+
     const orders = await Order.find(query)
       .populate('items.product', 'name price images')
       .sort('-createdAt');
