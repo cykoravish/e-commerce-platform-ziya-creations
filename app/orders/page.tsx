@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
-import { Package, Calendar, DollarSign, CheckCircle, Clock } from 'lucide-react';
+import { Package, Calendar, DollarSign, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 
 interface Order {
   _id: string;
@@ -134,8 +134,8 @@ export default function Orders() {
                         <span>{order.paymentStatus === 'completed' ? '✓ Paid' : 'Payment'}</span>
                       </div>
                     </div>
-                    <div className="text-blue-600 font-semibold text-sm group-hover:text-blue-700 transition-colors">
-                      View Details →
+                    <div className="text-blue-600 font-semibold text-sm group-hover:text-blue-700 transition-colors flex items-center gap-1">
+                      View Details <ArrowRight size={14} />
                     </div>
                   </div>
                 </div>
@@ -144,44 +144,6 @@ export default function Orders() {
           </div>
         )}
       </div>
-    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-blue-600">
-                        ₹{order.total.toFixed(2)}
-                      </p>
-                      <div className="flex gap-2 mt-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            order.status === 'delivered'
-                              ? 'bg-green-100 text-green-800'
-                              : order.status === 'cancelled'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-blue-100 text-blue-800'
-                          }`}
-                        >
-                          {order.status.toUpperCase()}
-                        </span>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            order.paymentStatus === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {order.paymentStatus.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-      </div>
-      
-      <Footer />
     </div>
   );
 }
