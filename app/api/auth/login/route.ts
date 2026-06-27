@@ -6,19 +6,24 @@ import { NextRequest } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { email, phone, password } = body;
 
-    if (!email || !password) {
-      return createErrorResponse('Email and password are required', 400, 'VALIDATION_ERROR');
+    if (!password || (!email && !phone)) {
+      return createErrorResponse('Email or phone and password are required', 400, 'VALIDATION_ERROR');
     }
 
     await connectDB();
 
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email or phone
+    const user = await User.findOne(
+      email
+        ? { email: email.toLowerCase() }
+        : { phone: phone }
+    );
 
     if (!user || !user.password) {
-      return createErrorResponse('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+      const loginMethod = email ? 'email' : 'phone';
+      return createErrorResponse(`Invalid ${loginMethod} or password`, 401, 'INVALID_CREDENTIALS');
     }
 
     // Only customers need email verification. Admins/Super Admins skip this

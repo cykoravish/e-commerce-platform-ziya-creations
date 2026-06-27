@@ -9,6 +9,8 @@ export interface IUser extends mongoose.Document {
   isVerified: boolean;
   avatar?: string;
   addresses: mongoose.Types.ObjectId[];
+  resetOTP?: string;
+  resetOTPExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +25,8 @@ const userSchema = new mongoose.Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     avatar: { type: String },
     addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Address' }],
+    resetOTP: { type: String, default: null },
+    resetOTPExpiry: { type: Date, default: null },
   },
   { timestamps: true }
 );

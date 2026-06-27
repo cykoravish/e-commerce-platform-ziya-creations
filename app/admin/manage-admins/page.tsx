@@ -79,8 +79,9 @@ export default function ManageAdmins() {
       );
 
       const data = await response.json();
+      console.log('[v0] Admin creation response:', { status: response.status, ok: response.ok, data });
 
-      if (response.ok) {
+      if (data.statusCode === 'SUCCESS') {
         setMessage('Admin created successfully!');
         setFormData({ email: '', password: '', name: '', phone: '' });
         setShowForm(false);
