@@ -17,13 +17,18 @@ export async function GET(request: NextRequest) {
     
     // Super admin sees all orders, regular admin sees only their product's orders
     if (auth.role !== 'super_admin') {
-      // Find all products created by this admin
       const Product = require('@/lib/models/Product').default;
+      // Use auth.userId (from JWT) for security
       const adminProducts = await Product.find({ createdBy: auth.userId }).select('_id');
       const productIds = adminProducts.map((p: any) => p._id);
       
-      // Find orders containing these products
-      query['items.product'] = { $in: productIds };
+      if (productIds.length > 0) {
+        // Find orders containing these products
+        query['items.product'] = { $in: productIds };
+      } else {
+        // No products created by this admin, return empty array
+        return createResponse([], 'Orders fetched successfully', 200, 'SUCCESS');
+      }
     }
 
     const orders = await Order.find(query)
