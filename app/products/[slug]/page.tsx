@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
+import { useWishlist } from '@/app/context/WishlistContext';
 import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
+import { Heart } from 'lucide-react';
 
 interface Review {
   _id: string;
@@ -37,14 +39,22 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+  const { toggleItem, isInWishlist } = useWishlist();
   const { user } = useAuth();
   const router = useRouter();
+  const [inWishlist, setInWishlist] = useState(false);
 
   useEffect(() => {
     if (slug) {
       fetchProduct();
     }
   }, [slug]);
+
+  useEffect(() => {
+    if (product) {
+      setInWishlist(isInWishlist(product._id));
+    }
+  }, [product, isInWishlist]);
 
   const fetchProduct = async () => {
     try {
@@ -72,8 +82,22 @@ export default function ProductDetail() {
         price: product.discountedPrice || product.price,
         quantity,
         image: product.images[0],
+        slug: product.slug,
       });
       router.push('/cart');
+    }
+  };
+
+  const handleToggleWishlist = () => {
+    if (product) {
+      toggleItem({
+        productId: product._id,
+        name: product.name,
+        price: product.discountedPrice || product.price,
+        image: product.images[0],
+        slug: product.slug,
+      });
+      setInWishlist(!inWishlist);
     }
   };
 
@@ -176,13 +200,26 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-              className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer"
-            >
-              {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddToCart}
+                disabled={product.stock === 0}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 cursor-pointer transition"
+              >
+                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              </button>
+              <button
+                onClick={handleToggleWishlist}
+                className={`px-4 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 ${
+                  inWishlist
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />
+              </button>
+            </div>
           </div>
         </div>
 

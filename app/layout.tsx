@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import './globals.css'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
+import { WishlistProvider } from './context/WishlistContext'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { headers } from 'next/headers'
@@ -44,11 +45,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Suspense fallback={null}>
           <AuthProvider>
             <CartProvider>
-              {!hideLayout && <Navbar />}
-              <main className={!hideLayout ? 'pb-16 md:pb-0' : ''}>
-                {children}
-              </main>
-              {!hideLayout && <Footer />}
+              <WishlistProvider>
+                {!hideLayout && <Navbar />}
+                <main className={!hideLayout ? 'pb-16 md:pb-0' : ''}>
+                  {children}
+                </main>
+                {!hideLayout && <Footer />}
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </Suspense>

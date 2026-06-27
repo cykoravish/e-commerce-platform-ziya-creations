@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/app/context/CartContext';
+import { useWishlist } from '@/app/context/WishlistContext';
 import { useAuth } from '@/app/context/AuthContext';
 import {
-  ShoppingCart, User, Search, Menu, X, Heart, ChevronRight,
+  ShoppingCart, User, Search, Menu, X, Heart, ChevronRight, Home,
 } from 'lucide-react';
 
 interface Category {
@@ -15,8 +17,10 @@ interface Category {
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { items: cart } = useCart();
+  const { items: wishlist, itemCount: wishlistCount } = useWishlist();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -99,6 +103,11 @@ export default function Navbar() {
             <nav className="hidden md:flex items-center gap-4 ml-auto">
               <Link href="/wishlist" className="relative text-white hover:text-secondary transition">
                 <Heart size={22} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
               </Link>
               <Link href="/cart" className="relative text-white hover:text-secondary transition">
                 <ShoppingCart size={22} />
@@ -288,26 +297,31 @@ export default function Navbar() {
 
       {/* Mobile Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 flex items-center h-16 shadow-lg">
-        <Link href="/" className="flex-1 flex flex-col items-center justify-center gap-0.5 text-primary">
-          <ShoppingCart size={20} />
+        <Link href="/" className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition ${pathname === '/' ? 'text-primary' : 'text-gray-500'}`}>
+          <Home size={20} />
           <span className="text-xs font-medium">Home</span>
         </Link>
-        <Link href="/cart" className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500 relative">
+        <Link href="/cart" className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition ${pathname === '/cart' ? 'text-primary' : 'text-gray-500'}`}>
           <ShoppingCart size={20} />
           {cartCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
               {cartCount}
             </span>
           )}
-          <span className="text-xs">Cart</span>
+          <span className="text-xs font-medium">Cart</span>
         </Link>
-        <Link href="/wishlist" className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500">
+        <Link href="/wishlist" className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition ${pathname === '/wishlist' ? 'text-primary' : 'text-gray-500'}`}>
           <Heart size={20} />
-          <span className="text-xs">Wishlist</span>
+          {wishlistCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+              {wishlistCount}
+            </span>
+          )}
+          <span className="text-xs font-medium">Wishlist</span>
         </Link>
-        <Link href={user ? '/account' : '/auth/login'} className="flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500">
+        <Link href={user ? '/account' : '/auth/login'} className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition ${pathname === '/account' || pathname === '/auth/login' ? 'text-primary' : 'text-gray-500'}`}>
           <User size={20} />
-          <span className="text-xs">{user ? 'Account' : 'Login'}</span>
+          <span className="text-xs font-medium">{user ? 'Account' : 'Login'}</span>
         </Link>
       </nav>
     </>
