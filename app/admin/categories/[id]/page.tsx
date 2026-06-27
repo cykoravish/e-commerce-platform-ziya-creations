@@ -36,7 +36,7 @@ export default function EditCategoryPage() {
 
     const loadCategory = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${params.id}`);
+        const response = await fetch(`/api/categories/${params.id}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -81,7 +81,7 @@ export default function EditCategoryPage() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${params.id}`, {
+      const response = await fetch(`/api/categories/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export default function EditCategoryPage() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${params.id}`, {
+      const response = await fetch(`/api/categories/${params.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

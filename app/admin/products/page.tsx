@@ -40,9 +40,9 @@ export default function AdminProducts() {
       setError(null);
       
       // Super admin sees all products, regular admin sees only their own
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=100`;
+      let url = `/api/products?limit=100`;
       if (!isSuperAdmin && user?.id) {
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?createdBy=${user.id}`;
+        url = `/api/products?createdBy=${user.id}`;
       }
       
       const response = await fetch(url, {
@@ -79,7 +79,7 @@ export default function AdminProducts() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`, {
+      const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

@@ -28,7 +28,7 @@ export default function CreateCategoryPage() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+      const response = await fetch(`/api/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -133,7 +133,7 @@ export default function HomePage() {
   const fetchCategories = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/categories`,
+        `/api/categories`,
       );
       const data = await res.json();
       if (data.statusCode === "SUCCESS") setCategories(data.data || []);
@@ -154,7 +154,7 @@ export default function HomePage() {
 
   const fetchProducts = async (categoryId?: string, gender?: string) => {
     try {
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=12`;
+      let url = `/api/products?limit=12`;
       if (categoryId) url += `&category=${categoryId}`;
       if (gender) url += `&gender=${gender}`;
       const res = await fetch(url);
@@ -173,7 +173,7 @@ export default function HomePage() {
   const fetchBestSellers = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=5&sort=-totalSold`,
+        `/api/products?limit=5&sort=-totalSold`,
       );
       const data = await res.json();
       if (data.statusCode === "SUCCESS" && data.data)
@@ -185,7 +185,7 @@ export default function HomePage() {
 
   const fetchBanners = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banners`);
+      const res = await fetch(`/api/banners`);
       const data = await res.json();
       if (data.statusCode === "SUCCESS") setBanners(data.data || []);
     } catch (e) {
@@ -234,7 +234,7 @@ export default function HomePage() {
     if (query.trim().length > 0) {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/products?search=${encodeURIComponent(query)}&limit=20`,
+          `/api/products?search=${encodeURIComponent(query)}&limit=20`,
         );
         const data = await res.json();
         if (data.statusCode === "SUCCESS" && data.data)

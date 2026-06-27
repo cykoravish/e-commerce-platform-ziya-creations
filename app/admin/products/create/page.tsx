@@ -31,7 +31,7 @@ export default function CreateProductPage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
+        const response = await fetch(`/api/categories`);
         const data = await response.json();
         if (data.data) {
           setCategories(data.data);
@@ -130,7 +130,7 @@ export default function CreateProductPage() {
         images: uploadedImages,
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/create`, {
+      const response = await fetch(`/api/admin/products/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

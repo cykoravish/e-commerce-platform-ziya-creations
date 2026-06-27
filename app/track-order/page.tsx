@@ -17,7 +17,7 @@ export default function TrackOrderPage() {
     setOrder(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${trackingId}`);
+      const response = await fetch(`/api/orders/${trackingId}`);
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
         setOrder(data.data);

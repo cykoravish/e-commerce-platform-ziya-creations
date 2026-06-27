@@ -28,7 +28,7 @@ export default function StoresPage() {
   const fetchStores = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stores`);
+      const response = await fetch(`/api/stores`);
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
         setStores(data.data || []);

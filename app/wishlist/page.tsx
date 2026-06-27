@@ -27,7 +27,7 @@ export default function WishlistPage() {
           return;
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist`, {
+        const response = await fetch(`/api/wishlist`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -48,7 +48,7 @@ export default function WishlistPage() {
   const removeFromWishlist = async (productId: string) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/wishlist`, {
+      await fetch(`/api/wishlist`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

@@ -35,7 +35,7 @@ export default function Orders() {
   const fetchOrders = async () => {
     try {
       setLoadingOrders(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/orders`, {
+      const response = await fetch(`/api/user/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -53,7 +53,7 @@ export default function AdminStores() {
 
   const fetchStores = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stores?all=true`);
+      const response = await fetch(`/api/stores?all=true`);
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
         setStores(data.data || []);
@@ -93,8 +93,8 @@ export default function AdminStores() {
     try {
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/stores/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/stores`;
+        ? `/api/stores/${editingId}`
+        : `/api/stores`;
 
       const response = await fetch(url, {
         method,
@@ -145,7 +145,7 @@ export default function AdminStores() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/stores/${storeId}`,
+        `/api/stores/${storeId}`,
         {
           method: 'DELETE',
           headers: {
