@@ -3,10 +3,10 @@ import Banner from '@/lib/models/Banner';
 import { createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: any) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     const banner = await Banner.findByIdAndUpdate(id, body, { new: true });
@@ -21,10 +21,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: any) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
 
     const banner = await Banner.findByIdAndDelete(id);
     if (!banner) {
