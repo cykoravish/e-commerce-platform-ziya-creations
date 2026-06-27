@@ -69,12 +69,22 @@ export default function AdminCoupons() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'discountValue' || name === 'minOrderValue' || name === 'maxDiscount' || name === 'usageLimit'
-        ? parseFloat(value) || 0
-        : value,
-    }));
+    
+    // Handle number fields - remove leading zeros and parse decimals
+    if (name === 'discountValue' || name === 'minOrderValue' || name === 'maxDiscount' || name === 'usageLimit') {
+      // Allow empty string for clearing
+      if (value === '') {
+        setFormData((prev) => ({ ...prev, [name]: 0 }));
+      } else {
+        // Remove leading zeros but keep decimals
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+          setFormData((prev) => ({ ...prev, [name]: numValue }));
+        }
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,13 +238,11 @@ export default function AdminCoupons() {
                     Discount Value {formData.discountType === 'percentage' ? '(%)' : '(₹)'} *
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="discountValue"
-                    value={formData.discountValue}
+                    value={formData.discountValue === 0 ? '' : formData.discountValue}
                     onChange={handleInputChange}
-                    placeholder="0"
-                    step="0.01"
-                    min="0"
+                    placeholder="Enter value"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -243,13 +251,11 @@ export default function AdminCoupons() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Min Order Value (₹) *</label>
                   <input
-                    type="number"
+                    type="text"
                     name="minOrderValue"
-                    value={formData.minOrderValue}
+                    value={formData.minOrderValue === 0 ? '' : formData.minOrderValue}
                     onChange={handleInputChange}
-                    placeholder="0"
-                    step="0.01"
-                    min="0"
+                    placeholder="Enter amount"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -258,13 +264,11 @@ export default function AdminCoupons() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Max Discount (₹)</label>
                   <input
-                    type="number"
+                    type="text"
                     name="maxDiscount"
-                    value={formData.maxDiscount}
+                    value={formData.maxDiscount === 0 ? '' : formData.maxDiscount}
                     onChange={handleInputChange}
-                    placeholder="0 (No limit)"
-                    step="0.01"
-                    min="0"
+                    placeholder="Leave blank for no limit"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -272,12 +276,11 @@ export default function AdminCoupons() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Usage Limit</label>
                   <input
-                    type="number"
+                    type="text"
                     name="usageLimit"
-                    value={formData.usageLimit}
+                    value={formData.usageLimit === 0 ? '' : formData.usageLimit}
                     onChange={handleInputChange}
-                    placeholder="0 (Unlimited)"
-                    min="0"
+                    placeholder="Leave blank for unlimited"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

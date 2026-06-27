@@ -16,7 +16,7 @@ interface Product {
 }
 
 export default function AdminProducts() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, authToken, isSuperAdmin } = useAuth();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -28,25 +28,27 @@ export default function AdminProducts() {
   }, [user, loading, isAdmin, router]);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && authToken) {
       fetchProducts();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, authToken]);
 
   const fetchProducts = async () => {
     try {
       setLoadingProducts(true);
+      // Super admin sees all products, regular admin sees only their own
+      const query = isSuperAdmin ? '?limit=100' : '?createdBy=' + user?._id;
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products?limit=100`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products${query}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${authToken}`,
           },
         }
       );
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
-        setProducts(data.data.products);
+        setProducts(data.data.products || data.data);
       }
     } catch (error) {
       console.error('[v0] Fetch products error:', error);
@@ -61,12 +63,11 @@ export default function AdminProducts() {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
       });
 

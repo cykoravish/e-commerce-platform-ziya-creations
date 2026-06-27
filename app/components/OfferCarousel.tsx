@@ -90,12 +90,14 @@ export default function OfferCarousel({ offers }: OfferCarouselProps) {
         <div className="relative">
           <div
             ref={touchScrollRef}
-            className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing"
+            className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing scroll-smooth"
             style={{
               transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
               overflowX: 'auto',
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
+              WebkitScrollSnap: 'type: x mandatory',
+              scrollSnapType: 'x mandatory',
             }}
           >
             {offers.map((offer) => (
