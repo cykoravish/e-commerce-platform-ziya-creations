@@ -212,6 +212,9 @@ export default function Checkout() {
   const [taxEnabled, setTaxEnabled] = useState(true);
   const [taxPercentage, setTaxPercentage] = useState(18);
   const [codAdvance, setCodAdvance] = useState(500);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
 
   useEffect(() => {
     if (!user || !authToken) {
@@ -237,6 +240,34 @@ export default function Checkout() {
       }
     } catch (error) {
       console.error('[v0] Fetch settings error:', error);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    try {
+      setCouponError('');
+      const taxAmount = taxEnabled ? (total * (taxPercentage / 100)) : 0;
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, cartTotal: total + taxAmount }),
+      });
+
+      const data = await response.json();
+      if (data.statusCode === 'SUCCESS') {
+        setAppliedCoupon(data.data);
+        setCouponCode('');
+      } else {
+        setCouponError(data.message || 'Invalid coupon');
+      }
+    } catch (error) {
+      setCouponError('Failed to validate coupon');
+      console.error('[v0] Coupon error:', error);
     }
   };
 
@@ -601,18 +632,35 @@ export default function Checkout() {
             {/* Payment Method */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">Payment Method</h2>
-              <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
-                <input
-                  type="radio"
-                  id="razorpay"
-                  name="payment"
-                  defaultChecked
-                  className="cursor-pointer"
-                />
-                <label htmlFor="razorpay" className="cursor-pointer flex-1">
-                  <p className="font-semibold">Razorpay</p>
-                  <p className="text-sm text-gray-600">Pay securely using Razorpay</p>
-                </label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
+                  <input
+                    type="radio"
+                    id="razorpay"
+                    name="payment"
+                    checked={paymentMethod === 'razorpay'}
+                    onChange={() => setPaymentMethod('razorpay')}
+                    className="cursor-pointer"
+                  />
+                  <label htmlFor="razorpay" className="cursor-pointer flex-1">
+                    <p className="font-semibold">Razorpay</p>
+                    <p className="text-sm text-gray-600">Pay securely using Razorpay</p>
+                  </label>
+                </div>
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
+                  <input
+                    type="radio"
+                    id="cod"
+                    name="payment"
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                    className="cursor-pointer"
+                  />
+                  <label htmlFor="cod" className="cursor-pointer flex-1">
+                    <p className="font-semibold">Cash on Delivery</p>
+                    <p className="text-sm text-gray-600">Pay ₹{codAdvance} advance online, rest on delivery</p>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -622,22 +670,54 @@ export default function Checkout() {
             <div className="bg-white rounded-lg shadow p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
 
+              {/* Coupon Section */}
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm font-semibold text-gray-700 mb-2">Have a coupon code?</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Enter coupon code"
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm transition"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
+                {appliedCoupon && (
+                  <p className="text-green-600 text-xs mt-2">✓ Coupon applied: Save ₹{appliedCoupon.discount}</p>
+                )}
+              </div>
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-semibold">₹{total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18%)</span>
-                  <span className="font-semibold">₹{(total * 0.18).toFixed(2)}</span>
-                </div>
+                {taxEnabled && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tax ({taxPercentage}%)</span>
+                    <span className="font-semibold">₹{(total * (taxPercentage / 100)).toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-semibold">Free</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>-₹{appliedCoupon.discount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="border-t pt-3 flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>₹{(total * 1.18).toFixed(2)}</span>
+                  <span>₹{(appliedCoupon ? appliedCoupon.finalAmount : (total + (taxEnabled ? total * (taxPercentage / 100) : 0))).toFixed(2)}</span>
                 </div>
               </div>
 
