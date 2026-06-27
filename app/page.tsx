@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "./context/CartContext";
+import { useWishlist } from "./context/WishlistContext";
 import { useAuth } from "./context/AuthContext";
 import OfferCarousel from "./components/OfferCarousel";
 import ReviewsSection from "./components/ReviewsSection";
@@ -53,7 +54,6 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedGender, setSelectedGender] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [bestSellerIndex, setBestSellerIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -64,6 +64,7 @@ export default function HomePage() {
   const [menuVisible, setMenuVisible] = useState(false);
   const { user, logout } = useAuth();
   const { items: cart } = useCart();
+  const { toggleItem, isInWishlist } = useWishlist();
 
   useEffect(() => {
     fetchData();
@@ -235,11 +236,13 @@ export default function HomePage() {
     fetchProducts();
   };
 
-  const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      const next = new Set(prev);
-      next.has(productId) ? next.delete(productId) : next.add(productId);
-      return next;
+  const handleToggleWishlist = (product: Product) => {
+    toggleItem({
+      productId: product._id,
+      name: product.name,
+      price: product.discountedPrice || product.price,
+      image: product.images[0],
+      slug: product.slug,
     });
   };
 
@@ -399,8 +402,8 @@ export default function HomePage() {
                       <div key={product._id} className="w-full flex-shrink-0">
                         <ProductCardLarge
                           product={product}
-                          isWishlisted={wishlist.has(product._id)}
-                          onWishlistToggle={() => toggleWishlist(product._id)}
+                          isWishlisted={isInWishlist(product._id)}
+                          onWishlistToggle={() => handleToggleWishlist(product)}
                         />
                       </div>
                     ))}
@@ -506,8 +509,8 @@ export default function HomePage() {
                     <ProductCard
                       key={product._id}
                       product={product}
-                      isWishlisted={wishlist.has(product._id)}
-                      onWishlistToggle={() => toggleWishlist(product._id)}
+                      isWishlisted={isInWishlist(product._id)}
+                      onWishlistToggle={() => handleToggleWishlist(product)}
                     />
                   ))}
                 </div>
