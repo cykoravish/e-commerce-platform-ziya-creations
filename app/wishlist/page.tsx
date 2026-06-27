@@ -78,7 +78,6 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar activeLink="wishlist" />
 
       {/* ── Main Content ── */}
       <div className="flex-1">
@@ -144,8 +143,6 @@ export default function WishlistPage() {
         )}
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

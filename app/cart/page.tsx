@@ -41,8 +41,6 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar activeLink="cart" />
-
       {/* ── Main Content ── */}
       <div className="flex-1">
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -164,8 +162,6 @@ export default function CartPage() {
         )}
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }
