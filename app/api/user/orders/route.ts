@@ -12,7 +12,17 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const orders = await Order.find({ user: auth.userId, paymentStatus: 'completed' })
+    const { searchParams } = new URL(request.url);
+    const orderId = searchParams.get('orderId');
+
+    const query: any = { user: auth.userId };
+    
+    // Filter by orderId if provided
+    if (orderId) {
+      query.orderId = orderId;
+    }
+
+    const orders = await Order.find(query)
       .populate('items.product', 'name price images')
       .sort('-createdAt');
 
