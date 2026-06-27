@@ -41,7 +41,7 @@ export default function AdminBanners() {
 
   const fetchBanners = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/banners?all=true`);
+      const response = await fetch(`/api/banners?all=true`);
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
         setBanners(data.data || []);
@@ -81,8 +81,8 @@ export default function AdminBanners() {
     try {
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/banners/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/banners`;
+        ? `/api/banners/${editingId}`
+        : `/api/banners`;
 
       const response = await fetch(url, {
         method,
@@ -127,7 +127,7 @@ export default function AdminBanners() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/banners/${bannerId}`,
+        `/api/banners/${bannerId}`,
         {
           method: 'DELETE',
           headers: {

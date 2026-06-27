@@ -42,7 +42,7 @@ export default function ManageAdmins() {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/create-admin`,
+        `/api/admin/create-admin`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ export default function ManageAdmins() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/create-admin`,
+        `/api/admin/create-admin`,
         {
           method: 'POST',
           headers: {

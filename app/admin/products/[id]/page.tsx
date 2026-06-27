@@ -58,7 +58,7 @@ export default function EditProductPage() {
     const loadData = async () => {
       try {
         // Load categories
-        const catResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`);
+        const catResponse = await fetch(`/api/categories`);
         const catData = await catResponse.json();
         if (catData.data) {
           setCategories(catData.data);
@@ -66,7 +66,7 @@ export default function EditProductPage() {
 
         // Load product
         const token = localStorage.getItem('authToken');
-        const prodResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${params.id}`, {
+        const prodResponse = await fetch(`/api/admin/products/${params.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -158,7 +158,7 @@ export default function EditProductPage() {
         images: uploadedImages,
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${params.id}`, {
+      const response = await fetch(`/api/admin/products/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -193,7 +193,7 @@ export default function EditProductPage() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${params.id}`, {
+      const response = await fetch(`/api/admin/products/${params.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

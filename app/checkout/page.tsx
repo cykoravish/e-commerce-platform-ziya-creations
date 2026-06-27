@@ -225,7 +225,7 @@ export default function Checkout() {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/user/addresses`,
+        `/api/user/addresses`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -254,7 +254,7 @@ export default function Checkout() {
     try {
       console.log('[v0] Adding address with data:', formData);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/user/addresses`,
+        `/api/user/addresses`,
         {
           method: 'POST',
           headers: {
@@ -294,7 +294,7 @@ export default function Checkout() {
     try {
       // Create order in backend
       const orderResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/orders/create`,
+        `/api/orders/create`,
         {
           method: 'POST',
           headers: {

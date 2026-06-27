@@ -50,7 +50,7 @@ export default function ProductDetail() {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${slug}`
+        `/api/products/${slug}`
       );
       const data = await response.json();
       if (data.statusCode === 'SUCCESS') {
