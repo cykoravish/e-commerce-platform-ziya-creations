@@ -125,8 +125,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get all admins
-    const admins = await User.find({ role: 'admin' }).select('email name phone role createdAt').sort('-createdAt');
+    // Get all admins (including password for superadmin view)
+    const admins = await User.find({ role: 'admin' }).select('email name phone role password createdAt').sort('-createdAt');
 
     return NextResponse.json(
       {

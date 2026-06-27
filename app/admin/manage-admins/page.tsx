@@ -256,6 +256,9 @@ export default function ManageAdmins() {
                       Phone
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                      Password
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                       Created
                     </th>
                     <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
@@ -264,12 +267,17 @@ export default function ManageAdmins() {
                   </tr>
                 </thead>
                 <tbody>
-                  {admins.map((admin) => (
+                  {admins.map((admin: any) => (
                     <tr key={admin._id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">{admin.email}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{admin.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {admin.phone || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                          {admin.password ? '••••••••' : 'N/A'}
+                        </code>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {new Date(admin.createdAt).toLocaleDateString()}
