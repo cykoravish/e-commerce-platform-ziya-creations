@@ -11,141 +11,140 @@ interface OfferCarouselProps {
 }
 
 export default function OfferCarousel({ offers }: OfferCarouselProps) {
-  const touchScrollRef = useTouchScroll();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
-  const [autoScroll, setAutoScroll] = useState(true);
   const autoScrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<number | null>(null);
 
-  // Calculate visible items based on screen size
+  const maxIndex = Math.max(0, offers.length - visibleCount);
+  const totalDots = maxIndex + 1;
+
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setVisibleCount(1);
-      } else if (window.innerWidth < 1024) {
-        setVisibleCount(2);
-      } else {
-        setVisibleCount(3);
-      }
+      if (window.innerWidth < 640) setVisibleCount(1);
+      else if (window.innerWidth < 1024) setVisibleCount(2);
+      else setVisibleCount(3);
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-scroll effect
+  // Reset index if visibleCount changes and index is out of bounds
   useEffect(() => {
-    if (!autoScroll || offers.length <= visibleCount) return;
+    setCurrentIndex((prev) => Math.min(prev, maxIndex));
+  }, [visibleCount, maxIndex]);
 
+  // Auto-scroll
+  useEffect(() => {
+    if (offers.length <= visibleCount) return;
     autoScrollTimer.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % (offers.length - visibleCount + 1));
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, 5000);
+    return () => { if (autoScrollTimer.current) clearInterval(autoScrollTimer.current); };
+  }, [offers.length, visibleCount, maxIndex]);
 
-    return () => {
-      if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
-    };
-  }, [autoScroll, offers.length, visibleCount]);
-
-  const handlePrev = () => {
-    setAutoScroll(false);
-    setCurrentIndex((prev) =>
-      prev === 0 ? Math.max(0, offers.length - visibleCount) : prev - 1
-    );
+  const stopAuto = () => {
+    if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
   };
 
-  const handleNext = () => {
-    setAutoScroll(false);
-    setCurrentIndex((prev) =>
-      prev >= offers.length - visibleCount ? 0 : prev + 1
-    );
-  };
+  const handlePrev = () => { stopAuto(); setCurrentIndex((p) => Math.max(0, p - 1)); };
+  const handleNext = () => { stopAuto(); setCurrentIndex((p) => Math.min(maxIndex, p + 1)); };
 
-  const handleDotClick = (index: number) => {
-    setAutoScroll(false);
-    setCurrentIndex(index);
+  // Touch/drag handlers
+  const onDragStart = (clientX: number) => { dragStart.current = clientX; };
+  const onDragEnd = (clientX: number) => {
+    if (dragStart.current === null) return;
+    const diff = dragStart.current - clientX;
+    if (Math.abs(diff) > 50) {
+      stopAuto();
+      diff > 0 ? handleNext() : handlePrev();
+    }
+    dragStart.current = null;
   };
 
   if (offers.length === 0) return null;
 
-  const visibleOffers = offers.slice(currentIndex, currentIndex + visibleCount);
-  const totalDots = Math.max(1, offers.length - visibleCount + 1);
+  const gap = 16; // px, matches gap-4
+  const slideWidth = 100 / visibleCount;
 
   return (
     <div className="w-full bg-gradient-to-r from-slate-50 to-blue-50 py-8 px-4 sm:py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-balance">
-              🔥 Hot Offers Just for You
-            </h2>
-            <p className="mt-2 text-sm sm:text-base text-slate-600">
-              Limited time deals on premium products
-            </p>
-          </div>
+        <div className="mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            🔥 Hot Offers Just for You
+          </h2>
+          <p className="mt-2 text-sm sm:text-base text-slate-600">
+            Limited time deals on premium products
+          </p>
         </div>
 
-        {/* Carousel Container */}
+        {/* Carousel */}
         <div className="relative">
-          <div
-            ref={touchScrollRef}
-            className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing scroll-smooth"
-            style={{
-              transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
-              overflowX: 'auto',
-              scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch',
-              WebkitScrollSnap: 'type: x mandatory',
-              scrollSnapType: 'x mandatory',
-            }}
-          >
-            {offers.map((offer) => (
-              <div
-                key={offer.id}
-                className="flex-shrink-0"
-                style={{ width: `calc(${100 / visibleCount}% - ${((visibleCount - 1) * 1) / visibleCount}rem)` }}
-              >
-                <OfferCard offer={offer} />
-              </div>
-            ))}
+          {/* Prev button */}
+          {currentIndex > 0 && (
+            <button
+              onClick={handlePrev}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 rounded-full bg-white shadow-lg hover:bg-blue-50 transition-all p-2 sm:p-3"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="w-5 h-5 text-slate-700" />
+            </button>
+          )}
+
+          {/* Track wrapper — overflow-hidden clips the sliding track */}
+          <div className="overflow-hidden">
+            <div
+              ref={trackRef}
+              className="flex transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing"
+              style={{
+                transform: `translateX(calc(-${currentIndex * slideWidth}% - ${currentIndex * gap / visibleCount}px))`,
+                gap: `${gap}px`,
+              }}
+              onMouseDown={(e) => onDragStart(e.clientX)}
+              onMouseUp={(e) => onDragEnd(e.clientX)}
+              onMouseLeave={() => { dragStart.current = null; }}
+              onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
+              onTouchEnd={(e) => onDragEnd(e.changedTouches[0].clientX)}
+            >
+              {offers.map((offer) => (
+                <div
+                  key={offer.id}
+                  className="flex-shrink-0"
+                  style={{ width: `calc(${slideWidth}% - ${gap * (visibleCount - 1) / visibleCount}px)` }}
+                >
+                  <OfferCard offer={offer} />
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Navigation Buttons */}
-          {offers.length > visibleCount && (
-            <>
-              <button
-                onClick={handlePrev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all p-2 sm:p-3 group"
-                aria-label="Previous offers"
-              >
-                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-blue-600 transition-colors" />
-              </button>
-
-              <button
-                onClick={handleNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all p-2 sm:p-3 group"
-                aria-label="Next offers"
-              >
-                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-blue-600 transition-colors" />
-              </button>
-            </>
+          {/* Next button */}
+          {currentIndex < maxIndex && (
+            <button
+              onClick={handleNext}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 rounded-full bg-white shadow-lg hover:bg-blue-50 transition-all p-2 sm:p-3"
+              aria-label="Next"
+            >
+              <ChevronRight className="w-5 h-5 text-slate-700" />
+            </button>
           )}
         </div>
 
-        {/* Dots Navigation */}
-        {offers.length > visibleCount && (
+        {/* Dots */}
+        {totalDots > 1 && (
           <div className="mt-6 flex justify-center gap-2">
             {Array.from({ length: totalDots }).map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => handleDotClick(idx)}
-                className={`transition-all rounded-full ${
-                  currentIndex === idx
-                    ? 'bg-blue-600 w-3 h-3'
-                    : 'bg-slate-300 w-2 h-2 hover:bg-slate-400'
+                onClick={() => { stopAuto(); setCurrentIndex(idx); }}
+                className={`rounded-full transition-all ${
+                  currentIndex === idx ? 'bg-blue-600 w-5 h-2.5' : 'bg-slate-300 w-2.5 h-2.5 hover:bg-slate-400'
                 }`}
-                aria-label={`Go to offer set ${idx + 1}`}
+                aria-label={`Go to ${idx + 1}`}
               />
             ))}
           </div>

@@ -57,7 +57,7 @@ export default function HomePage() {
   const searchParams = useSearchParams();
   const productsRef = useRef<HTMLElement>(null);
   const bestSellersScrollRef = useTouchScroll();
-  
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
@@ -132,9 +132,7 @@ export default function HomePage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch(
-        `/api/categories`,
-      );
+      const res = await fetch(`/api/categories`);
       const data = await res.json();
       if (data.statusCode === "SUCCESS") setCategories(data.data || []);
     } catch (e) {
@@ -172,9 +170,7 @@ export default function HomePage() {
 
   const fetchBestSellers = async () => {
     try {
-      const res = await fetch(
-        `/api/products?limit=5&sort=-totalSold`,
-      );
+      const res = await fetch(`/api/products?limit=5&sort=-totalSold`);
       const data = await res.json();
       if (data.statusCode === "SUCCESS" && data.data)
         setBestSellers(data.data.products || []);
@@ -207,11 +203,11 @@ export default function HomePage() {
 
   // Handle offer click - scroll to products section
   useEffect(() => {
-    const offerClicked = searchParams.get('offerClicked');
+    const offerClicked = searchParams.get("offerClicked");
     if (offerClicked && productsRef.current) {
       // Small delay to ensure page is fully rendered
       setTimeout(() => {
-        productsRef.current?.scrollIntoView({ behavior: 'smooth' });
+        productsRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
     }
   }, [searchParams]);
@@ -430,12 +426,19 @@ export default function HomePage() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg text-sm text-gray-900 bg-white border-2 border-transparent focus:outline-none focus:border-secondary placeholder-gray-400"
+                className="w-full px-4 py-2.5 rounded-lg text-sm text-gray-900 bg-white border-2 border-transparent focus:outline-none focus:border-secondary placeholder-gray-400 pr-16"
               />
-              <Search
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {searchQuery && (
+                  <button
+                    onClick={() => handleSearch("")}
+                    className="text-gray-400 hover:text-gray-600 transition"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+                <Search size={16} className="text-gray-400" />
+              </div>
             </div>
           </div>
         </div>
@@ -691,11 +694,79 @@ export default function HomePage() {
       {offers.length > 0 && <OfferCarousel offers={offers} />}
 
       {/* ── Main Content ── */}
-      <section ref={productsRef} className="max-w-7xl mx-auto px-4 py-6 md:py-10">
+      <section
+        ref={productsRef}
+        className="max-w-7xl mx-auto px-4 py-6 md:py-10"
+      >
         {loading ? (
           <SkeletonLoader />
         ) : (
           <>
+            {/* Best Sellers */}
+            {bestSellers.length > 0 && (
+              <section className="mb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+                    Best Sellers
+                  </h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() =>
+                        setBestSellerIndex(
+                          (p) =>
+                            (p - 1 + bestSellers.length) % bestSellers.length,
+                        )
+                      }
+                      className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition shadow-sm"
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setBestSellerIndex((p) => (p + 1) % bestSellers.length)
+                      }
+                      className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition shadow-sm"
+                      aria-label="Next"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-xl">
+                  <div
+                    ref={bestSellersScrollRef}
+                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing scroll-smooth"
+                    style={{
+                      transform: `translateX(-${bestSellerIndex * 100}%)`,
+                    }}
+                  >
+                    {bestSellers.map((product) => (
+                      <div key={product._id} className="w-full flex-shrink-0">
+                        <ProductCardLarge
+                          product={product}
+                          isWishlisted={wishlist.has(product._id)}
+                          onWishlistToggle={() => toggleWishlist(product._id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dots for best sellers */}
+                <div className="flex justify-center gap-1.5 mt-3">
+                  {bestSellers.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setBestSellerIndex(i)}
+                      className={`rounded-full transition-all ${i === bestSellerIndex ? "w-5 h-2 bg-primary" : "w-2 h-2 bg-gray-300"}`}
+                      aria-label={`Go to product ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
             {/* Category Filter Tabs */}
             {categories.length > 0 && (
               <section className="mb-8">
@@ -741,78 +812,6 @@ export default function HomePage() {
                 ))}
               </div>
             </section>
-
-            {/* Best Sellers */}
-            {bestSellers.length > 0 && (
-              <section className="mb-10">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg md:text-2xl font-bold text-gray-900">
-                    Best Sellers
-                  </h2>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        setBestSellerIndex(
-                          (p) =>
-                            (p - 1 + bestSellers.length) % bestSellers.length,
-                        )
-                      }
-                      className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition shadow-sm"
-                      aria-label="Previous"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setBestSellerIndex((p) => (p + 1) % bestSellers.length)
-                      }
-                      className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition shadow-sm"
-                      aria-label="Next"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-xl">
-                  <div
-                    ref={bestSellersScrollRef}
-                    className="flex transition-transform duration-500 ease-in-out cursor-grab active:cursor-grabbing scroll-smooth"
-                    style={{
-                      transform: `translateX(-${bestSellerIndex * 100}%)`,
-                      overflowX: 'auto',
-                      scrollBehavior: 'smooth',
-                      WebkitOverflowScrolling: 'touch',
-                      WebkitScrollSnap: 'type: x mandatory',
-                      scrollSnapType: 'x mandatory',
-                    }}
-                  >
-                    {bestSellers.map((product) => (
-                      <div key={product._id} className="w-full flex-shrink-0">
-                        <ProductCardLarge
-                          product={product}
-                          isWishlisted={wishlist.has(product._id)}
-                          onWishlistToggle={() => toggleWishlist(product._id)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dots for best sellers */}
-                <div className="flex justify-center gap-1.5 mt-3">
-                  {bestSellers.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setBestSellerIndex(i)}
-                      className={`rounded-full transition-all ${i === bestSellerIndex ? "w-5 h-2 bg-primary" : "w-2 h-2 bg-gray-300"}`}
-                      aria-label={`Go to product ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
             {/* Products Grid */}
             <section>
               <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -850,7 +849,7 @@ export default function HomePage() {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
                   {products.map((product) => (
                     <ProductCard
                       key={product._id}
@@ -1050,7 +1049,7 @@ function SkeletonLoader() {
       {/* Best seller skeleton */}
       <div className="h-56 md:h-80 bg-gray-200 rounded-xl" />
       {/* Grid skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
         {[...Array(8)].map((_, i) => (
           <div key={i} className="bg-gray-200 rounded-xl aspect-[3/4]" />
         ))}
@@ -1185,7 +1184,7 @@ function ProductCardLarge({
     // No fixed heights — content determines height naturally
     <div className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col md:flex-row">
       {/* Image — square on mobile, fixed width on desktop */}
-      <div className="relative w-full md:w-72 lg:w-96 aspect-square md:aspect-auto flex-shrink-0 overflow-hidden group">
+      <div className="relative w-full md:w-72 lg:w-96 aspect-square md:h-80 lg:h-96 md:aspect-auto flex-shrink-0 overflow-hidden group">
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
