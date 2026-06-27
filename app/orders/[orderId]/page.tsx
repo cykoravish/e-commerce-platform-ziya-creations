@@ -85,8 +85,8 @@ export default function OrderDetail() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          productId,
-          orderId: order?._id,
+          product: productId,
+          order: order?._id,
           rating: reviewData.rating,
           title: reviewData.title,
           comment: reviewData.comment,
