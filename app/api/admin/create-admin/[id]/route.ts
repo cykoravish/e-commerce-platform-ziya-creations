@@ -12,7 +12,7 @@ function createErrorResponse(message: string, statusCode: number, code: string) 
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: any
 ) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -32,8 +32,8 @@ export async function DELETE(
     }
 
     await connectDB();
-
-    const adminId = params.id;
+    console.log("params", await params)
+    const { id: adminId } = await params;
 
     // Check if admin exists
     const admin = await User.findById(adminId);
