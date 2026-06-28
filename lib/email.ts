@@ -44,6 +44,23 @@ export function generateOTPEmail(otp: string, name: string): string {
   `;
 }
 
+export function generatePasswordResetEmail(otp: string, name: string): string {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Password Reset Request</h2>
+      <p style="color: #666;">Hi ${name},</p>
+      <p style="color: #666;">We received a request to reset your password. Use the OTP below to proceed:</p>
+      <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
+        <h1 style="color: #007bff; letter-spacing: 5px; margin: 0;">${otp}</h1>
+      </div>
+      <p style="color: #666; font-size: 14px;">This OTP is valid for 10 minutes.</p>
+      <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email or contact support immediately.</p>
+      <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+      <p style="color: #999; font-size: 12px;">Ziya Creations Security Team</p>
+    </div>
+  `;
+}
+
 export function generateOrderConfirmationEmail(
   orderData: any,
   customerName: string

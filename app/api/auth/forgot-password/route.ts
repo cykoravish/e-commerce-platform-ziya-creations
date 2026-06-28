@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/db';
 import User from '@/lib/models/User';
+import { sendEmail, generatePasswordResetEmail } from '@/lib/email';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Generate OTP
@@ -32,19 +33,30 @@ export async function POST(req: NextRequest) {
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Save OTP to user (in production, use proper encryption)
+    // Save OTP to user
     user.resetOTP = otp;
     user.resetOTPExpiry = otpExpiry;
     await user.save();
 
-    // TODO: Send OTP via email (integrate with email service)
-    console.log(`[v0] OTP for ${email}: ${otp}`);
+    // Send OTP via email
+    const emailSent = await sendEmail({
+      to: email,
+      subject: 'Password Reset OTP - Ziya Creations',
+      html: generatePasswordResetEmail(otp, user.name),
+    });
+
+    if (!emailSent) {
+      return NextResponse.json(
+        { statusCode: 'EMAIL_FAILED', message: 'Failed to send OTP to email' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
         statusCode: 'SUCCESS',
         message: 'OTP sent to your email',
-        data: { email }, // In production, don't return OTP
+        data: { email },
       },
       { status: 200 }
     );
