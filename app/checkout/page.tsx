@@ -357,6 +357,10 @@ export default function Checkout() {
               quantity: item.quantity,
             })),
             address: selectedAddress,
+            coupon: appliedCoupon?.code || null,
+            discountAmount: appliedCoupon?.discount || 0,
+            taxAmount: taxEnabled ? (total * (taxPercentage / 100)) : 0,
+            taxEnabled: taxEnabled,
           }),
         }
       );
@@ -372,7 +376,9 @@ export default function Checkout() {
       if (orderData.statusCode === 'CREATED' && orderData.data) {
         const orderId = orderData.data.order?.orderId || orderData.data.orderId;
         const taxAmount = taxEnabled ? (total * (taxPercentage / 100)) : 0;
-        const finalTotal = total + taxAmount;
+        const subtotalWithTax = total + taxAmount;
+        // Use coupon discount if applied, otherwise use subtotal with tax
+        const finalTotal = appliedCoupon?.finalAmount || subtotalWithTax;
 
         if (paymentMethod === 'cod') {
           // Cash on Delivery - charge advance

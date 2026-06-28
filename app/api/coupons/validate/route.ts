@@ -47,10 +47,15 @@ export async function POST(request: NextRequest) {
       discount = coupon.discountValue;
     }
 
+    const finalAmount = Math.max(0, cartTotal - discount);
+
     return createResponse(
       {
-        coupon,
+        code: coupon.code,
         discount,
+        finalAmount,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
       },
       'Coupon validated successfully',
       200,

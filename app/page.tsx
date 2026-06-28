@@ -788,7 +788,7 @@ function ProductCardLarge({
               />
             ))}
             <span className="text-sm font-medium text-gray-700 ml-1">
-              {product.rating.toFixed(1)}
+              {(product.rating || 0).toFixed(1)}
             </span>
           </div>
 
