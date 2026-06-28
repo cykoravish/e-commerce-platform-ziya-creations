@@ -78,6 +78,35 @@ export default function ManageAdmins() {
     setTimeout(() => setCopiedAdminId(null), 2000);
   };
 
+  const deleteAdmin = async (adminId: string) => {
+    if (!window.confirm('Are you sure you want to delete this admin?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/admin/create-admin/${adminId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.statusCode === 'SUCCESS') {
+        setMessage('Admin deleted successfully');
+        fetchAdmins();
+      } else {
+        setMessage(data.message || 'Failed to delete admin');
+      }
+    } catch (error) {
+      console.error('[v0] Delete admin error:', error);
+      setMessage('Error deleting admin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -333,7 +362,11 @@ export default function ManageAdmins() {
                         {new Date(admin.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right text-sm">
-                        <button className="text-red-600 hover:text-red-800 transition">
+                        <button 
+                          onClick={() => deleteAdmin(admin._id)}
+                          className="text-red-600 hover:text-red-800 transition cursor-pointer"
+                          title="Delete admin"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </td>

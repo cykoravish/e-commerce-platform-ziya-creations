@@ -126,13 +126,7 @@ export default function AdminDashboard() {
                 description="Upload and manage website banners"
                 color="bg-pink-50 border-pink-200"
               />
-              <ManagementCard
-                href="/admin/stores"
-                icon={<MapPin size={24} />}
-                title="Manage Stores"
-                description="Add and update store locations"
-                color="bg-teal-50 border-teal-200"
-              />
+
               {isSuperAdmin && (
                 <>
                   <ManagementCard

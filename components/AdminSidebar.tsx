@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Grid3X3, ShoppingCart, Tag, Users, Settings, LogOut, Menu, X, Crown, MapPin, Image, Truck } from 'lucide-react';
+import { LayoutDashboard, Package, Grid3X3, ShoppingCart, Tag, Users, Settings, LogOut, Menu, X, Crown, MapPin, Image, Truck, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 
@@ -19,6 +19,7 @@ export function AdminSidebar() {
     { icon: Tag, label: 'Coupons', href: '/admin/coupons', roles: ['super_admin', 'admin'] },
     { icon: Image, label: 'Banners', href: '/admin/banners', roles: ['super_admin', 'admin'] },
     { icon: Truck, label: 'Ship', href: '/admin/ship', roles: ['super_admin', 'admin'] },
+    { icon: Star, label: 'Best Sellers', href: '/admin/best-sellers', roles: ['super_admin'] },
     { icon: Users, label: 'Manage Admins', href: '/admin/manage-admins', roles: ['super_admin'] },
     { icon: Tag, label: 'Manage Offers', href: '/admin/offers', roles: ['super_admin'] },
     { icon: Users, label: 'Manage Reviews', href: '/admin/reviews', roles: ['super_admin'] },

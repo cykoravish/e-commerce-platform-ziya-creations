@@ -717,7 +717,7 @@ export default function Checkout() {
                 )}
                 <div className="border-t pt-3 flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>₹{(appliedCoupon ? appliedCoupon.finalAmount : (total + (taxEnabled ? total * (taxPercentage / 100) : 0))).toFixed(2)}</span>
+                  <span>₹{appliedCoupon?.finalAmount ? appliedCoupon.finalAmount.toFixed(2) : (total + (taxEnabled ? total * (taxPercentage / 100) : 0)).toFixed(2)}</span>
                 </div>
               </div>
 

@@ -157,10 +157,19 @@ export default function HomePage() {
 
   const fetchBestSellers = async () => {
     try {
-      const res = await fetch(`/api/products?limit=5&sort=-totalSold`);
+      // First try to get admin-managed best sellers
+      const res = await fetch(`/api/admin/best-sellers`);
       const data = await res.json();
-      if (data.statusCode === "SUCCESS" && data.data)
-        setBestSellers(data.data.products || []);
+      if (data.statusCode === "SUCCESS" && data.data && data.data.length > 0) {
+        // Extract products from best sellers
+        setBestSellers(data.data.map((bs: any) => bs.productId));
+      } else {
+        // Fallback to products sorted by sales if no best sellers are set
+        const fallbackRes = await fetch(`/api/products?limit=5&sort=-totalSold`);
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData.statusCode === "SUCCESS" && fallbackData.data)
+          setBestSellers(fallbackData.data.products || []);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -251,7 +260,7 @@ export default function HomePage() {
   return (
     // pb-16 on mobile gives space for the bottom nav bar
     <div className="min-h-screen bg-gray-50">
-      {/* ── Banner Carousel ── */}
+      {/* ── Banner Carousel ─�� */}
       {banners.length > 0 && (
         <div className="relative h-52 sm:h-64 md:h-80 bg-gray-200 overflow-hidden">
           {banners.map((banner, idx) => (
