@@ -27,8 +27,15 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Invalid email or password', 401, 'INVALID_CREDENTIALS');
     }
 
-    // Compare password
-    const isPasswordValid = await comparePassword(password, user.password);
+    // Compare password based on role
+    let isPasswordValid = false;
+    if (user.role === 'admin') {
+      // Admin passwords are stored in plain text
+      isPasswordValid = password === user.password;
+    } else if (user.role === 'super_admin') {
+      // Super admin passwords are encrypted with bcrypt
+      isPasswordValid = await comparePassword(password, user.password);
+    }
 
     if (!isPasswordValid) {
       return createErrorResponse('Invalid email or password', 401, 'INVALID_CREDENTIALS');

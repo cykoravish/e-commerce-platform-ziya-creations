@@ -54,13 +54,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password);
-
-    // Create admin user
+    // Store password in plain text for admin role (per request)
+    // Customers and Super Admins will have encrypted passwords
     const newAdmin = new User({
       email,
-      password: hashedPassword,
+      password: password, // Store plain text for admin only
       name,
       phone: phone || '',
       role: 'admin',
