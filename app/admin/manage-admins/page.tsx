@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 interface Admin {
   _id: string;
@@ -29,6 +29,8 @@ export default function ManageAdmins() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+  const [copiedAdminId, setCopiedAdminId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== 'super_admin') {
@@ -58,6 +60,22 @@ export default function ManageAdmins() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const togglePasswordVisibility = (adminId: string) => {
+    const newSet = new Set(visiblePasswords);
+    if (newSet.has(adminId)) {
+      newSet.delete(adminId);
+    } else {
+      newSet.add(adminId);
+    }
+    setVisiblePasswords(newSet);
+  };
+
+  const copyPasswordToClipboard = (password: string, adminId: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedAdminId(adminId);
+    setTimeout(() => setCopiedAdminId(null), 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -275,9 +293,41 @@ export default function ManageAdmins() {
                         {admin.phone || '-'}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                          {admin.password ? '••••••••' : 'N/A'}
-                        </code>
+                        <div className="flex items-center gap-2">
+                          <code className="bg-gray-100 px-3 py-1 rounded text-xs font-mono">
+                            {admin.password ? (
+                              visiblePasswords.has(admin._id) ? admin.password : '••••••••'
+                            ) : (
+                              'N/A'
+                            )}
+                          </code>
+                          {admin.password && (
+                            <>
+                              <button
+                                onClick={() => togglePasswordVisibility(admin._id)}
+                                className="p-1 text-gray-600 hover:text-blue-600 transition"
+                                title={visiblePasswords.has(admin._id) ? 'Hide password' : 'Show password'}
+                              >
+                                {visiblePasswords.has(admin._id) ? (
+                                  <EyeOff size={16} />
+                                ) : (
+                                  <Eye size={16} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => copyPasswordToClipboard(admin.password, admin._id)}
+                                className="p-1 text-gray-600 hover:text-green-600 transition"
+                                title="Copy password"
+                              >
+                                {copiedAdminId === admin._id ? (
+                                  <Check size={16} className="text-green-600" />
+                                ) : (
+                                  <Copy size={16} />
+                                )}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {new Date(admin.createdAt).toLocaleDateString()}
