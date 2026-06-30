@@ -121,9 +121,11 @@ export default function HomePage() {
     try {
       const res = await fetch(`/api/categories`);
       const data = await res.json();
-      if (data.statusCode === "SUCCESS") setCategories(data.data || []);
+      if (data?.statusCode === "SUCCESS" && Array.isArray(data.data)) setCategories(data.data);
+      else setCategories([]);
     } catch (e) {
-      console.error(e);
+      console.error('[v0] fetchCategories error:', e);
+      setCategories([]);
     }
   };
 
@@ -145,12 +147,12 @@ export default function HomePage() {
       const res = await fetch(url);
       const data = await res.json();
       setProducts(
-        data.statusCode === "SUCCESS" && data.data
-          ? data.data.products || []
+        data?.statusCode === "SUCCESS" && data?.data?.products
+          ? Array.isArray(data.data.products) ? data.data.products : []
           : [],
       );
     } catch (e) {
-      console.error(e);
+      console.error('[v0] fetchProducts error:', e);
       setProducts([]);
     }
   };
@@ -160,18 +162,22 @@ export default function HomePage() {
       // First try to get admin-managed best sellers
       const res = await fetch(`/api/admin/best-sellers`);
       const data = await res.json();
-      if (data.statusCode === "SUCCESS" && data.data && data.data.length > 0) {
+      if (data?.statusCode === "SUCCESS" && Array.isArray(data.data) && data.data.length > 0) {
         // Extract products from best sellers
-        setBestSellers(data.data.map((bs: any) => bs.productId));
+        const sellers = data.data.map((bs: any) => bs?.productId).filter(Boolean);
+        setBestSellers(sellers || []);
       } else {
         // Fallback to products sorted by sales if no best sellers are set
         const fallbackRes = await fetch(`/api/products?limit=5&sort=-totalSold`);
         const fallbackData = await fallbackRes.json();
-        if (fallbackData.statusCode === "SUCCESS" && fallbackData.data)
-          setBestSellers(fallbackData.data.products || []);
+        if (fallbackData?.statusCode === "SUCCESS" && Array.isArray(fallbackData.data?.products))
+          setBestSellers(fallbackData.data.products);
+        else
+          setBestSellers([]);
       }
     } catch (e) {
-      console.error(e);
+      console.error('[v0] fetchBestSellers error:', e);
+      setBestSellers([]);
     }
   };
 
@@ -179,9 +185,11 @@ export default function HomePage() {
     try {
       const res = await fetch(`/api/banners`);
       const data = await res.json();
-      if (data.statusCode === "SUCCESS") setBanners(data.data || []);
+      if (data?.statusCode === "SUCCESS" && Array.isArray(data.data)) setBanners(data.data);
+      else setBanners([]);
     } catch (e) {
-      console.error(e);
+      console.error('[v0] fetchBanners error:', e);
+      setBanners([]);
     }
   };
 
@@ -189,11 +197,14 @@ export default function HomePage() {
     try {
       const res = await fetch("/api/offers?active=true");
       const data = await res.json();
-      if (data.statusCode === "SUCCESS") {
-        setOffers(data.data || []);
+      if (data?.statusCode === "SUCCESS" && Array.isArray(data.data)) {
+        setOffers(data.data);
+      } else {
+        setOffers([]);
       }
     } catch (e) {
-      console.error("Failed to fetch offers:", e);
+      console.error('[v0] fetchOffers error:', e);
+      setOffers([]);
     }
   };
 
@@ -229,10 +240,13 @@ export default function HomePage() {
           `/api/products?search=${encodeURIComponent(query)}&limit=20`,
         );
         const data = await res.json();
-        if (data.statusCode === "SUCCESS" && data.data)
-          setProducts(data.data.products || []);
+        if (data?.statusCode === "SUCCESS" && Array.isArray(data.data?.products))
+          setProducts(data.data.products);
+        else
+          setProducts([]);
       } catch (e) {
-        console.error(e);
+        console.error('[v0] handleSearch error:', e);
+        setProducts([]);
       }
     } else {
       fetchProducts();
