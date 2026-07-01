@@ -128,10 +128,10 @@ export default function CartPage() {
                     <span>Subtotal</span>
                     <span>₹{subtotal.toFixed(0)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-600">
+                  {/* <div className="flex justify-between text-gray-600">
                     <span>Tax (18%)</span>
                     <span>₹{tax}</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between text-gray-600">
                     <span>Shipping</span>
                     <span className="text-green-600 font-semibold">FREE</span>
