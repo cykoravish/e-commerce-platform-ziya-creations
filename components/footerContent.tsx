@@ -8,7 +8,7 @@ export const footerContent = {
       <>
         <p className="mb-5">
           Welcome to <strong>Ziya Creations</strong> – your trusted destination
-          for premium artificial jewellry.
+          for premium artificial jewellery.
         </p>
 
         <p className="mb-5">
