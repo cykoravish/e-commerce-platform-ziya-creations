@@ -19,13 +19,30 @@ interface CartItem {
 export default function CartPage() {
   const { items, removeItem, updateQuantity } = useCart();
   const [loading, setLoading] = useState(true);
+  const [taxEnabled, setTaxEnabled] = useState(true);
+  const [taxPercentage, setTaxPercentage] = useState(18);
 
   useEffect(() => {
-    setLoading(false);
+    fetchTaxSettings();
   }, []);
 
+  const fetchTaxSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings');
+      const data = await response.json();
+      if (data?.statusCode === 'SUCCESS') {
+        setTaxEnabled(data.data?.taxEnabled ?? true);
+        setTaxPercentage(data.data?.taxPercentage ?? 18);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('[v0] Fetch tax settings error:', error);
+      setLoading(false);
+    }
+  };
+
   const subtotal = items.reduce((sum, item) => sum + ((item.discountedPrice || item.price) * item.quantity), 0);
-  const tax = Math.round(subtotal * 0.18);
+  const tax = taxEnabled ? Math.round(subtotal * (taxPercentage / 100)) : 0;
   const total = subtotal + tax;
 
   if (loading) {
@@ -128,10 +145,12 @@ export default function CartPage() {
                     <span>Subtotal</span>
                     <span>₹{subtotal.toFixed(0)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Tax (18%)</span>
-                    <span>₹{tax}</span>
-                  </div>
+                  {taxEnabled && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>Tax ({taxPercentage}%)</span>
+                      <span>₹{tax}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-600">
                     <span>Shipping</span>
                     <span className="text-green-600 font-semibold">FREE</span>
