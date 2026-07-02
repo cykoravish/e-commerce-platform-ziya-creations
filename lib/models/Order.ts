@@ -12,7 +12,7 @@ export interface IOrder extends mongoose.Document {
   user: mongoose.Types.ObjectId;
   items: IOrderItem[];
   address: mongoose.Types.ObjectId;
-  coupon?: mongoose.Types.ObjectId;
+  coupon?: string;
   subtotal: number;
   discount: number;
   tax: number;
@@ -41,7 +41,7 @@ const orderSchema = new mongoose.Schema<IOrder>(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     items: [orderItemSchema],
     address: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
-    coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
+    coupon: { type: String },
     subtotal: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },

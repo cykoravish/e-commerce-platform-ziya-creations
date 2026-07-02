@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { items, address, coupon } = body;
+    const { items, address, coupon, discountAmount, taxAmount, taxEnabled } = body;
 
     if (!items || items.length === 0 || !address) {
       return createErrorResponse('Missing required fields', 400, 'VALIDATION_ERROR');
@@ -62,18 +62,23 @@ export async function POST(request: NextRequest) {
     // Generate order ID
     const orderId = `ZC-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+    // Calculate discount and tax
+    const discount = discountAmount || 0;
+    const tax = taxEnabled ? (taxAmount || 0) : 0;
+    const total = subtotal - discount + tax;
+
     // Create order
     const order = new Order({
       orderId,
       user: auth.userId,
       items: orderItems,
       address,
-      coupon: coupon || null,
+      coupon: coupon || undefined,
       subtotal,
-      discount: 0,
-      tax: Math.round(subtotal * 0.18), // 18% GST
+      discount,
+      tax,
       shipping: 0,
-      total: subtotal + Math.round(subtotal * 0.18),
+      total: Math.max(0, total),
       paymentMethod: 'razorpay',
       paymentStatus: 'pending',
     });
