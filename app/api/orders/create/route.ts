@@ -4,6 +4,7 @@ import User from '@/lib/models/User';
 import Product from '@/lib/models/Product';
 import { verifyAuth, createResponse, createErrorResponse } from '@/lib/auth';
 import { NextRequest } from 'next/server';
+import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { items, address, coupon, discountAmount, taxAmount, taxEnabled } = body;
+    let { items, address, coupon, discountAmount, taxAmount, taxEnabled } = body;
+
+    // Ensure address is a valid ObjectId string
+    if (!address) {
+      return createErrorResponse('Address is required', 400, 'MISSING_ADDRESS');
+    }
+    
+    const addressId = typeof address === 'object' ? address._id : address;
+    if (!mongoose.Types.ObjectId.isValid(addressId)) {
+      return createErrorResponse('Invalid address ID', 400, 'INVALID_ADDRESS');
+    }
 
     if (!items || items.length === 0 || !address) {
       return createErrorResponse('Missing required fields', 400, 'VALIDATION_ERROR');
@@ -72,7 +83,7 @@ export async function POST(request: NextRequest) {
       orderId,
       user: auth.userId,
       items: orderItems,
-      address,
+      address: new mongoose.Types.ObjectId(addressId),
       coupon: coupon || undefined,
       subtotal,
       discount,
