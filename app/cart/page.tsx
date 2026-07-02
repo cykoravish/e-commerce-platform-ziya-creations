@@ -25,8 +25,8 @@ export default function CartPage() {
   }, []);
 
   const subtotal = items.reduce((sum, item) => sum + ((item.discountedPrice || item.price) * item.quantity), 0);
-  const tax = Math.round(subtotal * 0.18);
-  const total = subtotal + tax;
+  // const tax = Math.round(subtotal * 0.18);
+  const total = subtotal;
 
   if (loading) {
     return (
